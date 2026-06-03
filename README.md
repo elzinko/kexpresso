@@ -158,6 +158,12 @@ sentencePattern.matches("No punctuation at the end")  // false
 | `anyChar()` | `.` | Any character except newline |
 | `letter()` | `[a-zA-Z]` | ASCII letters only |
 | `capitalLetter()` | `[A-Z]` | ASCII uppercase letters |
+| `lowercaseLetter()` | `[a-z]` | ASCII lowercase letters |
+| `alphanumeric()` | `[a-zA-Z0-9]` | ASCII letter or digit |
+| `tab()` | `\t` | Horizontal tab |
+| `newline()` | `\n` | Newline |
+| `carriageReturn()` | `\r` | Carriage return |
+| `nonWordBoundary()` | `\B` | Non-word boundary position |
 | `endPunctuation()` | `[.!?]` | Sentence-ending punctuation |
 
 ### Character classes
@@ -261,6 +267,50 @@ mlAmount.find("250ml")?.value // "250"  (lookahead consumed nothing: "ml" stays 
 mlAmount.find("250g")         // null   (not followed by "ml")
 ```
 
+> **Note:** The JVM regex engine requires lookbehind patterns to be **bounded in length**.
+> `precededBy { oneOrMore { digit() } }` (unbounded `+`) will throw a
+> `PatternSyntaxException` at compile time. Use a bounded form instead:
+> `precededBy { between(1, 10) { digit() } }`.
+
+### Composition & escape hatch
+
+| Method | Regex produced | Notes |
+|---|---|---|
+| `raw(pattern)` | `pattern` verbatim | **No escaping** — use only for raw regex fragments the DSL cannot yet express |
+| `include(pattern)` | `(?:pattern.source)` | Embed a compiled [KexpressoPattern] as a non-capturing group |
+| `backreference(n)` | `\n` | Numeric back-reference to the nth capturing group (n ≥ 1) |
+| `backreference(name)` | `\k<name>` | Named back-reference; name must start with a letter and contain only letters or digits |
+
+**`raw` example — inject a verbatim date fragment:**
+
+```kotlin
+val datePattern = kexpresso { raw("\\d{4}-\\d{2}-\\d{2}") }
+datePattern.matches("2026-06-03") // true
+```
+
+**`include` example — compose a reusable octet pattern into an IP address:**
+
+```kotlin
+val octet = kexpresso { between(1, 3) { digit() } }
+val ip = kexpresso {
+    include(octet)
+    exactly(3) { char('.'); include(octet) }
+}
+ip.matches("192.168.1.1") // true
+```
+
+**`backreference` example — detect repeated words:**
+
+```kotlin
+val repeated = kexpresso {
+    capture { oneOrMore { wordChar() } }
+    whitespace()
+    backreference(1)
+}
+repeated.containsMatchIn("latte latte") // true
+repeated.containsMatchIn("latte mocha") // false
+```
+
 ### Domain helpers
 
 These extension functions on `KexpressoBuilder` compose common real-world patterns from
@@ -327,6 +377,52 @@ second?.value // "Latte"
 // All non-overlapping matches (returns a lazy Sequence)
 val drinks = wordPattern.findAll("Espresso Latte Cappuccino").map { it.value }.toList()
 // ["Espresso", "Latte", "Cappuccino"]
+```
+
+### String operations
+
+`KexpressoPattern` exposes convenience methods that delegate to the underlying `Regex`:
+
+**`replaceFirst` — replace the first match:**
+
+```kotlin
+val drink = kexpresso { oneOrMore { letter() } }
+drink.replaceFirst("espresso latte", "ESPRESSO") // "ESPRESSO latte"
+```
+
+**`replaceAll` with a fixed string — replace every match:**
+
+```kotlin
+val drink = kexpresso { oneOrMore { letter() } }
+drink.replaceAll("espresso latte", "brew") // "brew brew"
+```
+
+**`replaceAll` with a transform — compute the replacement per match:**
+
+```kotlin
+val drink = kexpresso { oneOrMore { letter() } }
+drink.replaceAll("espresso latte") { it.value.uppercase() } // "ESPRESSO LATTE"
+```
+
+**`split` — split around matches:**
+
+```kotlin
+val sep = kexpresso { literal(", ") }
+sep.split("Espresso, Latte, Cappuccino") // ["Espresso", "Latte", "Cappuccino"]
+sep.split("Espresso, Latte, Cappuccino", limit = 2) // ["Espresso", "Latte, Cappuccino"]
+```
+
+**`matchEntire` — full-string match with group access:**
+
+```kotlin
+val drinkOrder = kexpresso {
+    capture("drink") { oneOrMore { letter() } }
+    whitespace()
+    capture("size") { oneOrMore { letter() } }
+}
+val result = drinkOrder.matchEntire("Latte Large")
+result?.groups?.get("drink")?.value // "Latte"
+result?.groups?.get("size")?.value  // "Large"
 ```
 
 ### Inspecting the pattern
