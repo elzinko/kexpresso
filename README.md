@@ -46,7 +46,13 @@ Benefits at a glance:
 - **Readable** — the DSL reads top-to-bottom like a description of what you want to match.
 - **Type-safe** — the compiler catches typos that a raw string never would.
 - **Composable** — build complex patterns from simple named primitives.
-- **Zero runtime overhead** — the DSL compiles to a plain `Regex` at construction time.
+- **Zero runtime overhead** — the DSL compiles to a plain `Regex` at construction time
+  (measured: **0 % match-time overhead** vs raw `Regex` — see [benchmarks](benchmarks/README.md)).
+
+> **Is kexpresso right for your case?** We're honest about it: it's great for complex,
+> maintained patterns and a poor fit for trivial ones. Read
+> **[When to use kexpresso — and when not to](docs/WHEN-TO-USE.md)** before adopting.
+> Where we're headed: the **[Roadmap](docs/ROADMAP.md)**.
 
 ---
 

@@ -2,6 +2,7 @@ plugins {
     kotlin("jvm") version "1.8.20"
     id("io.gitlab.arturbosch.detekt") version "1.23.6"
     id("org.jetbrains.dokka") version "1.9.20"
+    id("me.champeau.jmh") version "0.7.2"
     jacoco
     `java-library`
     `maven-publish`
@@ -57,6 +58,21 @@ val dokkaJavadocJar by tasks.registering(Jar::class) {
     dependsOn(tasks.dokkaJavadoc)
     from(tasks.dokkaJavadoc.flatMap { it.outputDirectory })
     archiveClassifier.set("javadoc")
+}
+
+// ── JMH benchmarks ──────────────────────────────────────────────────────────
+jmh {
+    warmupIterations.set(2)
+    iterations.set(3)
+    fork.set(1)
+    timeOnIteration.set("1s")
+    warmup.set("1s")
+}
+
+// Exclude the JMH source set from Detekt so benchmark boilerplate doesn't
+// fail the style checks that are applied to production code.
+tasks.withType<io.gitlab.arturbosch.detekt.Detekt>().configureEach {
+    exclude("**/jmh/**")
 }
 
 publishing {
