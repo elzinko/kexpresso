@@ -525,6 +525,39 @@ p.matches("ristretto") // true
 
 ---
 
+## Safety: ReDoS analysis
+
+Certain regex patterns can cause catastrophic backtracking — an attacker who controls
+input can make the regex engine take exponential time. The classic shape is **nested
+unbounded quantifiers** such as `(?:a+)+`.
+
+Kexpresso provides a best-effort static analyzer to catch this shape at development time:
+
+```kotlin
+// DSL produces (?:(?:[a-zA-Z])+)+ — nested unbounded quantifiers
+val risky = kexpresso { oneOrMore { oneOrMore { letter() } } }
+
+val report = risky.analyze()
+if (report.isPotentiallyVulnerable) {
+    println("Findings:")
+    report.findings.forEach { println("  [${it.severity}] ${it.message}") }
+}
+// Findings:
+//   [WARNING] Nested unbounded quantifier at index 0: (?:(?:[a-zA-Z])+)+ …
+
+// Convenience shorthand
+if (risky.isPotentiallyVulnerable) { /* warn or reject */ }
+```
+
+**This is a best-effort heuristic, not a guarantee.** It detects the canonical "evil
+regex" shape — a group with an outer unbounded quantifier (`*`, `+`, or `{n,}`) whose
+body also contains an inner unbounded quantifier. It does NOT detect all ReDoS patterns
+(e.g. alternation-based catastrophic backtracking), and a clean result does not prove
+the pattern is safe. Use it as an early-warning signal alongside proper input constraints
+and performance testing.
+
+---
+
 ## Building and contributing
 
 ```bash

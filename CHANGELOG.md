@@ -9,7 +9,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-_Nothing yet._
+### Added
+
+- **ReDoS analysis API** (`Analysis.kt`) — best-effort static heuristic for
+  catastrophic-backtracking risk, accessible via `KexpressoPattern.analyze()` and the
+  convenience property `KexpressoPattern.isPotentiallyVulnerable`.
+  - Detects the canonical "evil regex" shape: nested unbounded quantifiers — an unbounded
+    quantifier (`*`, `+`, or `{n,}`) applied to a group whose body itself contains an
+    unbounded quantifier (e.g. `(?:a+)+`, `(a*)*`, `(?:\w+)+`).
+  - Returns a `ReDoSReport` with zero or more `ReDoSFinding`s (each with a human-readable
+    `message`, source `index`, and `ReDoSSeverity.WARNING` severity).
+  - False-positive guards: quantifier chars inside `[...]`, escaped quantifiers (`\+`,
+    `\*`), bounded outer or inner quantifiers, possessive quantifiers (`*+`, `++`), and
+    atomic groups `(?>...)`.
+  - Honestly documented as a **heuristic, not a proof** — a clean result does not
+    guarantee the pattern is free of catastrophic backtracking.
 
 ---
 
