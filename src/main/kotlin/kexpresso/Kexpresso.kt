@@ -57,12 +57,40 @@ object Kexpresso {
  * @property source the raw regex string.
  * @property regex the compiled [Regex].
  */
-class KexpressoPattern(
+class KexpressoPattern internal constructor(
     val source: String,
     val regex: Regex,
+    internal val ast: RegexNode,
 ) {
+    /**
+     * Public constructor that builds a pattern from a pre-rendered [source] and compiled [regex].
+     *
+     * The internal AST representation falls back to a single [Raw] node wrapping [source], so the
+     * resulting pattern still renders and describes itself consistently.
+     *
+     * @param source the raw regex string.
+     * @param regex the compiled [Regex].
+     */
+    constructor(source: String, regex: Regex) : this(source, regex, Raw(source))
+
     /** The set of [RegexOption]s used when compiling this pattern. */
     val options: Set<RegexOption> get() = regex.options
+
+    /**
+     * Returns a readable English description of this pattern, derived from its internal AST.
+     *
+     * The description is a deterministic, comma-joined phrase. It is meant for humans reading or
+     * debugging a pattern, not for machine round-tripping.
+     *
+     * Example:
+     * ```kotlin
+     * kexpresso { startOfText(); oneOrMore { digit() }; endOfText() }.describe()
+     * // "start of text, one or more of (a digit), end of text"
+     * ```
+     *
+     * @return the English description.
+     */
+    fun describe(): String = ast.describe()
 
     /**
      * Returns true if the entire [input] matches this pattern.
@@ -239,28 +267,31 @@ private fun requireValidGroupName(name: String) {
 @Suppress("TooManyFunctions")
 class KexpressoBuilder {
 
-    private val sb = StringBuilder()
+    private val nodes = mutableListOf<RegexNode>()
 
     // ── internal helpers ────────────────────────────────────────────────────
 
-    /** Append [token] directly to the internal buffer. */
-    internal fun append(token: String): KexpressoBuilder {
-        sb.append(token)
+    /**
+     * Appends [token] verbatim as a [Raw] node.
+     *
+     * This is the shim that lets the typed primitives and every domain/helper extension
+     * (`Text.kt`, `Writing.kt`, `Domains.kt`) keep their external behaviour and signature
+     * unchanged: each emits its raw regex fragment and the AST records it as [Raw].
+     */
+    internal fun append(token: String): KexpressoBuilder = add(Raw(token))
+
+    /** Adds [node] to the accumulating sequence and returns this builder for chaining. */
+    private fun add(node: RegexNode): KexpressoBuilder {
+        nodes += node
         return this
     }
 
-    /** Render a child block into a standalone string without modifying this builder. */
-    private fun renderBlock(block: KexpressoBuilder.() -> Unit): String {
+    /** Build the node for a child block as a [SequenceNode] without modifying this builder. */
+    private fun childNode(block: KexpressoBuilder.() -> Unit): RegexNode {
         val child = KexpressoBuilder()
         child.block()
-        return child.sb.toString()
+        return SequenceNode(child.nodes.toList())
     }
-
-    /** Wrap [inner] in a non-capturing group `(?:...)`. */
-    private fun nonCaptureGroup(inner: String): String = "(?:$inner)"
-
-    /** Append a lazy suffix `?` when [greedy] is false. */
-    private fun lazySuffix(greedy: Boolean): String = if (greedy) "" else "?"
 
     // ── build ────────────────────────────────────────────────────────────────
 
@@ -270,9 +301,10 @@ class KexpressoBuilder {
      * @param options optional [RegexOption]s applied to the resulting regex.
      */
     fun build(vararg options: RegexOption): KexpressoPattern {
-        val source = sb.toString()
+        val root = SequenceNode(nodes.toList())
+        val source = root.render()
         val regex = if (options.isEmpty()) Regex(source) else Regex(source, options.toSet())
-        return KexpressoPattern(source, regex)
+        return KexpressoPattern(source, regex, root)
     }
 
     // ── primitives ───────────────────────────────────────────────────────────
@@ -283,50 +315,50 @@ class KexpressoBuilder {
      *
      * @param text the plain text to match.
      */
-    fun literal(text: String): KexpressoBuilder = append(Regex.escape(text))
+    fun literal(text: String): KexpressoBuilder = add(Literal(text))
 
     /**
      * Appends a single character, escaping it if it is a regex meta-character.
      *
      * @param c the character to match.
      */
-    fun char(c: Char): KexpressoBuilder = append(Regex.escape(c.toString()))
+    fun char(c: Char): KexpressoBuilder = add(Literal(c.toString()))
 
     /** Matches a decimal digit (`\d`). */
-    fun digit(): KexpressoBuilder = append("\\d")
+    fun digit(): KexpressoBuilder = add(Token("\\d", "a digit"))
 
     /** Matches a non-digit character (`\D`). */
-    fun nonDigit(): KexpressoBuilder = append("\\D")
+    fun nonDigit(): KexpressoBuilder = add(Token("\\D", "a non-digit"))
 
     /** Matches any whitespace character (`\s`). */
-    fun whitespace(): KexpressoBuilder = append("\\s")
+    fun whitespace(): KexpressoBuilder = add(Token("\\s", "whitespace"))
 
     /**
      * Alias for [whitespace]; matches any whitespace character (`\s`).
      * Kept for backward compatibility.
      */
-    fun space(): KexpressoBuilder = append("\\s")
+    fun space(): KexpressoBuilder = add(Token("\\s", "whitespace"))
 
     /** Matches any non-whitespace character (`\S`). */
-    fun nonWhitespace(): KexpressoBuilder = append("\\S")
+    fun nonWhitespace(): KexpressoBuilder = add(Token("\\S", "a non-whitespace character"))
 
     /** Matches a word character (`\w`). */
-    fun wordChar(): KexpressoBuilder = append("\\w")
+    fun wordChar(): KexpressoBuilder = add(Token("\\w", "a word character"))
 
     /** Matches a non-word character (`\W`). */
-    fun nonWordChar(): KexpressoBuilder = append("\\W")
+    fun nonWordChar(): KexpressoBuilder = add(Token("\\W", "a non-word character"))
 
     /** Matches any character except newline (`.`). */
-    fun anyChar(): KexpressoBuilder = append(".")
+    fun anyChar(): KexpressoBuilder = add(Token(".", "any character"))
 
     /** Matches any ASCII letter `[a-zA-Z]`. */
-    fun letter(): KexpressoBuilder = append("[a-zA-Z]")
+    fun letter(): KexpressoBuilder = add(Token("[a-zA-Z]", "a letter"))
 
     /** Matches any ASCII uppercase letter `[A-Z]`. */
-    fun capitalLetter(): KexpressoBuilder = append("[A-Z]")
+    fun capitalLetter(): KexpressoBuilder = add(Token("[A-Z]", "an uppercase letter"))
 
     /** Matches any sentence-ending punctuation `[.!?]`. */
-    fun endPunctuation(): KexpressoBuilder = append("[.!?]")
+    fun endPunctuation(): KexpressoBuilder = add(Token("[.!?]", "sentence-ending punctuation"))
 
     // ── character classes ────────────────────────────────────────────────────
 
@@ -341,7 +373,7 @@ class KexpressoBuilder {
             .replace("]", "\\]")
             .replace("^", "\\^")
             .replace("-", "\\-")
-        return append("[$escaped]")
+        return add(Token("[$escaped]", "any of \"$chars\""))
     }
 
     /**
@@ -354,7 +386,7 @@ class KexpressoBuilder {
             .replace("]", "\\]")
             .replace("^", "\\^")
             .replace("-", "\\-")
-        return append("[^$escaped]")
+        return add(Token("[^$escaped]", "none of \"$chars\""))
     }
 
     /**
@@ -363,44 +395,45 @@ class KexpressoBuilder {
      * @param from the lower bound (inclusive).
      * @param to the upper bound (inclusive).
      */
-    fun inRange(from: Char, to: Char): KexpressoBuilder = append("[$from-$to]")
+    fun inRange(from: Char, to: Char): KexpressoBuilder =
+        add(Token("[$from-$to]", "a character in range $from-$to"))
 
     // ── anchors ──────────────────────────────────────────────────────────────
 
     /** Anchors to the start of a line (`^`). */
-    fun startOfLine(): KexpressoBuilder = append("^")
+    fun startOfLine(): KexpressoBuilder = add(Token("^", "start of line"))
 
     /** Anchors to the end of a line (`$`). */
-    fun endOfLine(): KexpressoBuilder = append("$")
+    fun endOfLine(): KexpressoBuilder = add(Token("$", "end of line"))
 
     /** Anchors to the start of the entire input (`\A`). */
-    fun startOfText(): KexpressoBuilder = append("\\A")
+    fun startOfText(): KexpressoBuilder = add(Token("\\A", "start of text"))
 
     /** Anchors to the end of the entire input (`\z`). */
-    fun endOfText(): KexpressoBuilder = append("\\z")
+    fun endOfText(): KexpressoBuilder = add(Token("\\z", "end of text"))
 
     /** Matches a word boundary (`\b`). */
-    fun wordBoundary(): KexpressoBuilder = append("\\b")
+    fun wordBoundary(): KexpressoBuilder = add(Token("\\b", "a word boundary"))
 
     // ── completions ──────────────────────────────────────────────────────────
 
     /** Matches a non-word boundary (`\B`). */
-    fun nonWordBoundary(): KexpressoBuilder = append("\\B")
+    fun nonWordBoundary(): KexpressoBuilder = add(Token("\\B", "a non-word boundary"))
 
     /** Matches any lowercase ASCII letter (`[a-z]`). */
-    fun lowercaseLetter(): KexpressoBuilder = append("[a-z]")
+    fun lowercaseLetter(): KexpressoBuilder = add(Token("[a-z]", "a lowercase letter"))
 
     /** Matches any ASCII letter or digit (`[a-zA-Z0-9]`). */
-    fun alphanumeric(): KexpressoBuilder = append("[a-zA-Z0-9]")
+    fun alphanumeric(): KexpressoBuilder = add(Token("[a-zA-Z0-9]", "an alphanumeric character"))
 
     /** Matches a horizontal tab character (`\t`). */
-    fun tab(): KexpressoBuilder = append("\\t")
+    fun tab(): KexpressoBuilder = add(Token("\\t", "a tab"))
 
     /** Matches a newline character (`\n`). */
-    fun newline(): KexpressoBuilder = append("\\n")
+    fun newline(): KexpressoBuilder = add(Token("\\n", "a newline"))
 
     /** Matches a carriage-return character (`\r`). */
-    fun carriageReturn(): KexpressoBuilder = append("\\r")
+    fun carriageReturn(): KexpressoBuilder = add(Token("\\r", "a carriage return"))
 
     // ── quantifiers ──────────────────────────────────────────────────────────
 
@@ -410,10 +443,8 @@ class KexpressoBuilder {
      * @param greedy when false, the quantifier is lazy (`??`).
      * @param block the pattern to make optional.
      */
-    fun optional(greedy: Boolean = true, block: KexpressoBuilder.() -> Unit): KexpressoBuilder {
-        val inner = nonCaptureGroup(renderBlock(block))
-        return append("$inner?${lazySuffix(greedy)}")
-    }
+    fun optional(greedy: Boolean = true, block: KexpressoBuilder.() -> Unit): KexpressoBuilder =
+        add(Quantifier(childNode(block), QuantifierKind.Optional, greedy))
 
     /**
      * Repeats the [block] pattern zero or more times (`(?:...)*`).
@@ -421,10 +452,8 @@ class KexpressoBuilder {
      * @param greedy when false, the quantifier is lazy (`*?`).
      * @param block the pattern to repeat.
      */
-    fun zeroOrMore(greedy: Boolean = true, block: KexpressoBuilder.() -> Unit): KexpressoBuilder {
-        val inner = nonCaptureGroup(renderBlock(block))
-        return append("$inner*${lazySuffix(greedy)}")
-    }
+    fun zeroOrMore(greedy: Boolean = true, block: KexpressoBuilder.() -> Unit): KexpressoBuilder =
+        add(Quantifier(childNode(block), QuantifierKind.ZeroOrMore, greedy))
 
     /**
      * Repeats the [block] pattern one or more times (`(?:...)+`).
@@ -432,10 +461,8 @@ class KexpressoBuilder {
      * @param greedy when false, the quantifier is lazy (`+?`).
      * @param block the pattern to repeat.
      */
-    fun oneOrMore(greedy: Boolean = true, block: KexpressoBuilder.() -> Unit): KexpressoBuilder {
-        val inner = nonCaptureGroup(renderBlock(block))
-        return append("$inner+${lazySuffix(greedy)}")
-    }
+    fun oneOrMore(greedy: Boolean = true, block: KexpressoBuilder.() -> Unit): KexpressoBuilder =
+        add(Quantifier(childNode(block), QuantifierKind.OneOrMore, greedy))
 
     /**
      * Repeats the [block] pattern exactly [n] times (`(?:...){n}`).
@@ -443,10 +470,8 @@ class KexpressoBuilder {
      * @param n the exact repetition count.
      * @param block the pattern to repeat.
      */
-    fun exactly(n: Int, block: KexpressoBuilder.() -> Unit): KexpressoBuilder {
-        val inner = nonCaptureGroup(renderBlock(block))
-        return append("$inner{$n}")
-    }
+    fun exactly(n: Int, block: KexpressoBuilder.() -> Unit): KexpressoBuilder =
+        add(Quantifier(childNode(block), QuantifierKind.Exactly(n), greedy = true))
 
     /**
      * Repeats the [block] pattern at least [n] times (`(?:...){n,}`).
@@ -455,10 +480,8 @@ class KexpressoBuilder {
      * @param greedy when false, the quantifier is lazy.
      * @param block the pattern to repeat.
      */
-    fun atLeast(n: Int, greedy: Boolean = true, block: KexpressoBuilder.() -> Unit): KexpressoBuilder {
-        val inner = nonCaptureGroup(renderBlock(block))
-        return append("$inner{$n,}${lazySuffix(greedy)}")
-    }
+    fun atLeast(n: Int, greedy: Boolean = true, block: KexpressoBuilder.() -> Unit): KexpressoBuilder =
+        add(Quantifier(childNode(block), QuantifierKind.AtLeast(n), greedy))
 
     /**
      * Repeats the [block] pattern between [min] and [max] times (`(?:...){min,max}`).
@@ -473,10 +496,8 @@ class KexpressoBuilder {
         max: Int,
         greedy: Boolean = true,
         block: KexpressoBuilder.() -> Unit,
-    ): KexpressoBuilder {
-        val inner = nonCaptureGroup(renderBlock(block))
-        return append("$inner{$min,$max}${lazySuffix(greedy)}")
-    }
+    ): KexpressoBuilder =
+        add(Quantifier(childNode(block), QuantifierKind.Between(min, max), greedy))
 
     // ── grouping & alternation ────────────────────────────────────────────────
 
@@ -485,18 +506,16 @@ class KexpressoBuilder {
      *
      * @param block the pattern to group.
      */
-    fun group(block: KexpressoBuilder.() -> Unit): KexpressoBuilder {
-        return append(nonCaptureGroup(renderBlock(block)))
-    }
+    fun group(block: KexpressoBuilder.() -> Unit): KexpressoBuilder =
+        add(Group(childNode(block), GroupKind.NonCapturing))
 
     /**
      * Wraps the [block] pattern in a capturing group (`(...)`).
      *
      * @param block the pattern to capture.
      */
-    fun capture(block: KexpressoBuilder.() -> Unit): KexpressoBuilder {
-        return append("(${renderBlock(block)})")
-    }
+    fun capture(block: KexpressoBuilder.() -> Unit): KexpressoBuilder =
+        add(Group(childNode(block), GroupKind.Capturing))
 
     /**
      * Wraps the [block] pattern in a named capturing group (`(?<name>...)`).
@@ -512,7 +531,7 @@ class KexpressoBuilder {
      */
     fun capture(name: String, block: KexpressoBuilder.() -> Unit): KexpressoBuilder {
         requireValidGroupName(name)
-        return append("(?<$name>${renderBlock(block)})")
+        return add(Group(childNode(block), GroupKind.Named(name)))
     }
 
     /**
@@ -521,10 +540,8 @@ class KexpressoBuilder {
      *
      * @param blocks the alternative patterns.
      */
-    fun oneOf(vararg blocks: KexpressoBuilder.() -> Unit): KexpressoBuilder {
-        val alternatives = blocks.joinToString("|") { renderBlock(it) }
-        return append(nonCaptureGroup(alternatives))
-    }
+    fun oneOf(vararg blocks: KexpressoBuilder.() -> Unit): KexpressoBuilder =
+        add(Alternation(blocks.map { childNode(it) }))
 
     // ── lookarounds ──────────────────────────────────────────────────────────
 
@@ -543,7 +560,7 @@ class KexpressoBuilder {
      * @param block the pattern that must appear immediately after the current position.
      */
     fun followedBy(block: KexpressoBuilder.() -> Unit): KexpressoBuilder =
-        append("(?=${renderBlock(block)})")
+        add(Lookaround(childNode(block), LookaroundKind.FollowedBy))
 
     /**
      * Asserts that the current position is NOT immediately followed by the pattern
@@ -560,7 +577,7 @@ class KexpressoBuilder {
      * @param block the pattern that must NOT appear immediately after the current position.
      */
     fun notFollowedBy(block: KexpressoBuilder.() -> Unit): KexpressoBuilder =
-        append("(?!${renderBlock(block)})")
+        add(Lookaround(childNode(block), LookaroundKind.NotFollowedBy))
 
     /**
      * Asserts that the current position is immediately preceded by the pattern
@@ -577,7 +594,7 @@ class KexpressoBuilder {
      * @param block the pattern that must appear immediately before the current position.
      */
     fun precededBy(block: KexpressoBuilder.() -> Unit): KexpressoBuilder =
-        append("(?<=${renderBlock(block)})")
+        add(Lookaround(childNode(block), LookaroundKind.PrecededBy))
 
     /**
      * Asserts that the current position is NOT immediately preceded by the pattern
@@ -594,7 +611,7 @@ class KexpressoBuilder {
      * @param block the pattern that must NOT appear immediately before the current position.
      */
     fun notPrecededBy(block: KexpressoBuilder.() -> Unit): KexpressoBuilder =
-        append("(?<!${renderBlock(block)})")
+        add(Lookaround(childNode(block), LookaroundKind.NotPrecededBy))
 
     // ── composition & escape hatch ────────────────────────────────────────────
 
@@ -614,7 +631,7 @@ class KexpressoBuilder {
      *
      * @param pattern the raw regex string to append verbatim.
      */
-    fun raw(pattern: String): KexpressoBuilder = append(pattern)
+    fun raw(pattern: String): KexpressoBuilder = add(Raw(pattern))
 
     /**
      * Appends a numeric back-reference (`\n`) that matches the same text captured by
@@ -636,7 +653,7 @@ class KexpressoBuilder {
      */
     fun backreference(n: Int): KexpressoBuilder {
         require(n >= 1) { "Back-reference index must be >= 1, but was $n." }
-        return append("\\$n")
+        return add(Backreference("$n", "group $n"))
     }
 
     /**
@@ -663,7 +680,7 @@ class KexpressoBuilder {
      */
     fun backreference(name: String): KexpressoBuilder {
         requireValidGroupName(name)
-        return append("\\k<$name>")
+        return add(Backreference("k<$name>", "group \"$name\""))
     }
 
     /**
@@ -686,5 +703,5 @@ class KexpressoBuilder {
      * @param pattern the compiled [KexpressoPattern] to embed.
      */
     fun include(pattern: KexpressoPattern): KexpressoBuilder =
-        append("(?:${pattern.source})")
+        add(Group(pattern.ast, GroupKind.NonCapturing))
 }
