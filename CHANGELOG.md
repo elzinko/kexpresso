@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+_Nothing yet._
+
+---
+
+## [0.2.0] - 2026-06-03
+
 ### Added
 
 - **Domain helpers** (`Domains.kt`) — 12 ready-to-use `KexpressoBuilder` extension
@@ -26,7 +32,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `hashtag()` — social-media hashtag (`#` + letter + word chars).
   - `mention()` — @mention, 1–50 alphanumeric/underscore chars (Twitter/X convention).
   - `e164Phone()` — E.164 international phone number in compact form (e.g. `+14155552671`).
-
 - **DSL completions** — new primitives and anchor on `KexpressoBuilder`:
   - `lowercaseLetter()` → `[a-z]`
   - `alphanumeric()` → `[a-zA-Z0-9]`
@@ -48,16 +53,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `replaceAll(input, transform)` — replace all matches using a per-match transform.
   - `split(input, limit)` — split the input around pattern matches.
   - `matchEntire(input)` — attempt a full-string match, returning `MatchResult?`.
-- **Lookaround support** — `followedBy`, `notFollowedBy`, `precededBy`, `notPrecededBy`
-  (positive/negative lookahead and lookbehind).
-- **Distribution & release pipeline** — the library is now publishable:
-  - Consumable via [JitPack](https://jitpack.io/#elzinko/kexpresso) as
-    `com.github.elzinko:kexpresso:<tag>` (`jitpack.yml`, JDK 17).
-  - `maven-publish` configuration producing a main jar, a sources jar, and a
-    Dokka-generated javadoc jar, with a complete POM (license, developer, SCM).
-  - Tag-driven **Release** workflow (`v*.*.*`) that builds, publishes to
-    GitHub Packages, and creates a GitHub Release with generated notes.
-  - Release version is injected via `-PreleaseVersion=<tag>`.
 
 ### Changed
 
@@ -84,6 +79,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     `exactly`, `atLeast`, `between`.
   - Grouping and alternation: `group`, `capture` (numbered), `capture(name)` (named),
     `oneOf`.
+- **Lookaround support** — `followedBy`, `notFollowedBy`, `precededBy`, `notPrecededBy`
+  (positive/negative lookahead and lookbehind).
 - **`KexpressoPattern`** — immutable, thread-safe result type wrapping a compiled `Regex`,
   exposing `matches`, `containsMatchIn`, `find`, `findAll`, `toRegex`, `toPattern`,
   `source`, and `options`.
@@ -92,10 +89,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Text helpers** (`Text.kt`) — `word`, `pseudo`, `email`, `url` extension functions.
 - **Writing helpers** (`Writing.kt`) — `sentence` and `paragraph` extension functions
   composed from core primitives.
+- **Distribution & release pipeline** — the library is publishable:
+  - Consumable via [JitPack](https://jitpack.io/#elzinko/kexpresso) as
+    `com.github.elzinko:kexpresso:<tag>` (`jitpack.yml`, JDK 17).
+  - `maven-publish` configuration producing a main jar, a sources jar, and a
+    Dokka-generated javadoc jar, with a complete POM (license, developer, SCM).
+  - Tag-driven **Release** workflow (`v*.*.*`) that builds, publishes to
+    GitHub Packages, and creates a GitHub Release with generated notes.
+  - Release version is injected via `-PreleaseVersion=<tag>`.
 - **CI/CD** — GitHub Actions workflow running compile, test, Detekt, and JaCoCo on every
   push and pull request.
 - **Detekt** — static analysis configuration at `config/detekt/detekt.yml`.
 - **JaCoCo** — test coverage reporting.
 
-[Unreleased]: https://github.com/elzinko/kexpresso/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/elzinko/kexpresso/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/elzinko/kexpresso/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/elzinko/kexpresso/releases/tag/v0.1.0
