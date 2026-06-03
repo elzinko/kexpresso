@@ -11,6 +11,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Domain helpers** (`Domains.kt`) — 12 ready-to-use `KexpressoBuilder` extension
+  functions covering common real-world formats:
+  - `ipv4()` — IPv4 address in dotted-decimal notation (each octet 0–255).
+  - `uuid()` — RFC 4122 UUID, versions 1–5, case-insensitive hex.
+  - `slug()` — URL/CMS slug (lowercase alphanumeric groups separated by hyphens).
+  - `hexColor()` — CSS hex color `#RGB`, `#RGBA`, `#RRGGBB`, or `#RRGGBBAA`.
+  - `semanticVersion()` — SemVer 2.0.0 string, with optional pre-release and build metadata.
+  - `isoDate()` — ISO-8601 calendar date `YYYY-MM-DD` (month/day structurally validated;
+    day-of-month not checked against calendar).
+  - `isoTime()` — ISO-8601 time `HH:MM[:SS][Z|±HH:MM]` (leap seconds excluded).
+  - `integerNumber()` — signed/unsigned integer without leading zeros.
+  - `decimalNumber()` — decimal number with optional fractional part.
+  - `hashtag()` — social-media hashtag (`#` + letter + word chars).
+  - `mention()` — @mention, 1–50 alphanumeric/underscore chars (Twitter/X convention).
+  - `e164Phone()` — E.164 international phone number in compact form (e.g. `+14155552671`).
+
 - **DSL completions** — new primitives and anchor on `KexpressoBuilder`:
   - `lowercaseLetter()` → `[a-z]`
   - `alphanumeric()` → `[a-zA-Z0-9]`
