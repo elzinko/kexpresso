@@ -59,6 +59,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     GitHub Packages, and creates a GitHub Release with generated notes.
   - Release version is injected via `-PreleaseVersion=<tag>`.
 
+### Changed
+
+- **Build tooling** — upgraded the Gradle wrapper from 7.6.1 to **8.7**, clearing the
+  "incompatible with Gradle 8.0" deprecation warning. (A residual Gradle-9.0 forward
+  notice remains; it originates from plugin internals, not this build script.)
+
 ---
 
 ## [0.1.0] - 2026-06-03
