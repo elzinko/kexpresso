@@ -236,6 +236,31 @@ drinkMenu.matches("Latte")     // true
 drinkMenu.matches("Americano") // false
 ```
 
+### Lookarounds
+
+Lookarounds assert a condition at the current position without consuming any characters.
+They are zero-width: the matched text is not included in the result.
+
+| Method | Regex produced | Notes |
+|---|---|---|
+| `followedBy { }` | `(?=...)` | Positive lookahead — position must be followed by the pattern |
+| `notFollowedBy { }` | `(?!...)` | Negative lookahead — position must NOT be followed by the pattern |
+| `precededBy { }` | `(?<=...)` | Positive lookbehind — position must be preceded by the pattern |
+| `notPrecededBy { }` | `(?<!...)` | Negative lookbehind — position must NOT be preceded by the pattern |
+
+**Example — extract the numeric part of a measurement:**
+
+```kotlin
+// Match digits only when immediately followed by "ml"
+val mlAmount = kexpresso {
+    oneOrMore { digit() }
+    followedBy { literal("ml") }
+}
+
+mlAmount.find("250ml")?.value // "250"  (lookahead consumed nothing: "ml" stays in input)
+mlAmount.find("250g")         // null   (not followed by "ml")
+```
+
 ### Domain helpers
 
 These extension functions on `KexpressoBuilder` compose common real-world patterns from
