@@ -30,29 +30,27 @@ String operations (`replaceAll`/`split`/`matchEntire`), composition (`include`/`
 `backreference`), DSL completions, **12 ready-to-use domain helpers**, Gradle 8.7, hosted
 API docs.
 
-### 🚧 0.3.0 — Prove it & make it safe
-- **The honest enabler** — JMH `benchmarks` module + [WHEN-TO-USE.md](WHEN-TO-USE.md) with
-  measured numbers (0 % match overhead; construction cost; verbosity trade-offs).
-- **ReDoS safety** — detect catastrophic-backtracking shapes (nested quantifiers) and warn
-  at build time / via `analyze()`. The first *non-cosmetic* reason to adopt kexpresso.
-- More helpers where they add objective brevity (`ipv6`, `macAddress`, `base64`, …).
+### ✅ 0.3.0 — Prove it & make it safe
+- ✅ **The honest enabler** — JMH `benchmarks` module + [WHEN-TO-USE.md](WHEN-TO-USE.md) with
+  measured numbers (**0 % match overhead**; construction cost; verbosity trade-offs).
+- ✅ **ReDoS safety** — `KexpressoPattern.analyze()` / `isPotentiallyVulnerable` detect the
+  nested-unbounded-quantifier shape. The first *non-cosmetic* reason to adopt kexpresso.
+- ✅ **AST spine** (`Ast.kt`) — internal `RegexNode` representation; output byte-identical,
+  full test suite as the regression net. The backbone the rest of 1.0 builds on.
+- ✅ **`describe()`** — a pattern explains itself in English (first AST-powered feature).
+- ✅ **Typed captures** — `MatchResult.captures` with type-safe `int`/`string`/… accessors.
+  (The kind of ergonomics that made magic-regexp succeed; it wins the purist.)
+- ⏭️ Deferred: more helpers (`ipv6`, `macAddress`, `base64`, …).
 
-### 🔭 0.4.0 — Kotlin-idiomatic ergonomics
-- **Typed captures** — `captureInt("year")`, type-safe named access, destructuring.
-  (This is what made magic-regexp succeed in the JS world; it wins the purist.)
-- **`describe()`** — a pattern explains itself in English (first AST-powered feature).
-- **`kexpresso-test`** — `pattern.examples(n)` generates strings that match, for tests
-  and confidence.
-
-### 🌟 1.0.0 — Make it a category
-- **AST refactor** (the spine above), with the public API unchanged — the 183-test suite is
-  the regression net.
+### 🔭 Next (toward 1.0.0) — Make it a category
+- 🚧 **Reverse** — `Kexpresso.from("\\d{4}-\\d{2}")` → DSL code + `describe()`. Everyone
+  inherits cryptic regexes; turning them back into readable form is the killer feature.
+  Now feasible: parse a regex string into the existing `RegexNode` AST, then emit DSL. **(in progress)**
+- **`kexpresso-test`** — `pattern.examples(n)` generates strings that match, for tests.
 - **Kotlin Multiplatform** — JVM / JS / Native / WASM. `Regex` is already multiplatform and
   the DSL is pure string-building, so the port is mostly build setup + isolating the few
   JVM-only bits (`toPattern()`, fixed-length lookbehind).
 - **Modularization** — `kexpresso-core` / `-analysis` / `-test` / `-kotlinx`.
-- **Reverse** — `Kexpresso.from("\\d{4}-\\d{2}")` → DSL code + `describe()`. Everyone
-  inherits cryptic regexes; turning them back into readable form is the killer feature.
 
 ## Assumptions to test (riskiest first)
 
