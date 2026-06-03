@@ -1,0 +1,25 @@
+# Detekt configuration for kexpresso.
+# Built upon the default config (buildUponDefaultConfig = true), so this file
+# only overrides what we want to tune for this codebase.
+
+build:
+  maxIssues: 0
+
+style:
+  MagicNumber:
+    active: false # regex quantifiers/lengths read better inline than as named constants
+  ReturnCount:
+    active: true
+    max: 3
+
+complexity:
+  TooManyFunctions:
+    active: true
+    thresholdInClasses: 25
+    thresholdInObjects: 25
+
+naming:
+  FunctionNaming:
+    active: true
+    # Allow backtick test names like `should match a space`
+    ignoreAnnotated: ['Test']
