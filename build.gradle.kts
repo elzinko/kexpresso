@@ -1,12 +1,12 @@
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-
 plugins {
-//    id("org.jetbrains.kotlin.jvm") version "1.8.20"
     kotlin("jvm") version "1.8.20"
+    id("io.gitlab.arturbosch.detekt") version "1.23.6"
+    jacoco
+    `java-library`
 }
 
-group = "kexpresso"
-version = "1.0-SNAPSHOT"
+group = "com.github.elzinko"
+version = "0.1.0"
 
 repositories {
     mavenCentral()
@@ -14,17 +14,29 @@ repositories {
 
 dependencies {
     testImplementation(kotlin("test"))
-    testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
-    testImplementation("org.junit.jupiter:junit-jupiter-engine:5.9.2")
+    testImplementation("org.junit.jupiter:junit-jupiter:5.10.2")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
-    implementation("com.google.guava:guava:31.1-jre")
 }
 
+kotlin {
+    jvmToolchain(17)
+}
+
+detekt {
+    buildUponDefaultConfig = true
+    config.setFrom("$rootDir/config/detekt/detekt.yml")
+    baseline = file("$rootDir/config/detekt/baseline.xml")
+}
 
 tasks.test {
     useJUnitPlatform()
+    finalizedBy(tasks.jacocoTestReport)
 }
 
-kotlin { // Extension for easy setup
-    jvmToolchain(18) // Target version of generated JVM bytecode. See 7️⃣
+tasks.jacocoTestReport {
+    dependsOn(tasks.test)
+    reports {
+        xml.required.set(true)
+        html.required.set(true)
+    }
 }

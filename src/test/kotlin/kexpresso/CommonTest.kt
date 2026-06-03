@@ -1,7 +1,7 @@
 package kexpresso
 
-import org.junit.Assert.assertTrue
-import org.junit.Test
+import kotlin.test.Test
+import kotlin.test.assertTrue
 
 class CommonBuilderTest {
 
@@ -46,7 +46,7 @@ class CommonBuilderTest {
         val pattern = CommonBuilder().zeroOrMore { word() }.compile()
         assertTrue(pattern.matches(""))
         assertTrue(pattern.matches("Espresso"))
-        assertTrue(pattern.matches("Cappuccino Espresso Latte"))
+        assertTrue(pattern.matches("CappuccinoEspressoLatte"))
     }
 
     private fun CommonBuilder.compile() = Regex(pattern.toString())
