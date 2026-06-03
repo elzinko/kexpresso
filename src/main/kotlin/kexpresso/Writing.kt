@@ -1,16 +1,28 @@
 package kexpresso
 
-class WritingBuilder(private val textBuilder: TextBuilder) {
-    fun sentence(): WritingBuilder {
-        textBuilder.capitalLetter().word().zeroOrMore { space().word() }.endPunctuation()
-        return this
-    }
+/**
+ * Appends a pattern that matches a single sentence.
+ *
+ * A sentence starts with a capital letter, contains one or more words separated
+ * by single spaces, and ends with terminal punctuation (`.`, `!`, or `?`).
+ *
+ * Example match: `"Espresso is perfect!"`
+ */
+fun KexpressoBuilder.sentence(): KexpressoBuilder {
+    capitalLetter()
+    word()
+    zeroOrMore { space(); word() }
+    endPunctuation()
+    return this
+}
 
-    fun paragraph(): WritingBuilder {
-        textBuilder.zeroOrMore { sentence() }
-        return this
-    }
-
-    fun space() = textBuilder.space()
-    fun word() = textBuilder.word()
+/**
+ * Appends a pattern that matches one or more sentences separated by single spaces.
+ *
+ * Example match: `"Latte is smooth. Espresso is strong!"`
+ */
+fun KexpressoBuilder.paragraph(): KexpressoBuilder {
+    sentence()
+    zeroOrMore { space(); sentence() }
+    return this
 }
