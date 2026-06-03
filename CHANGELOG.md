@@ -9,8 +9,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+_Nothing yet._
+
+---
+
+## [0.3.0] - 2026-06-03
+
 ### Added
 
+- **Honest positioning & benchmarks** — `docs/WHEN-TO-USE.md` documents when to use
+  kexpresso and, just as importantly, when **not** to (the verbosity trade-off, per-persona
+  verdicts), a JMH `benchmarks` module proving **0 % match-time overhead** versus a raw
+  pre-compiled `Regex` (reproducible with `./gradlew jmh`), and a published `docs/ROADMAP.md`.
 - **Typed captures API** (`Captures.kt`) — ergonomic, type-safe extraction of named and
   indexed capture groups from any `MatchResult` via the new `MatchResult.captures` extension
   property. `Captures` exposes:
@@ -141,6 +151,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Detekt** — static analysis configuration at `config/detekt/detekt.yml`.
 - **JaCoCo** — test coverage reporting.
 
-[Unreleased]: https://github.com/elzinko/kexpresso/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/elzinko/kexpresso/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/elzinko/kexpresso/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/elzinko/kexpresso/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/elzinko/kexpresso/releases/tag/v0.1.0
