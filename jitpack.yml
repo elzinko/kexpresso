@@ -1,0 +1,6 @@
+# JitPack build configuration.
+# Consumers depend on `com.github.elzinko:kexpresso:<tag-or-commit>`.
+jdk:
+  - openjdk17
+install:
+  - ./gradlew -PreleaseVersion=$VERSION publishToMavenLocal -x test
