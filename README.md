@@ -6,6 +6,7 @@
 [![JitPack](https://jitpack.io/v/elzinko/kexpresso.svg)](https://jitpack.io/#elzinko/kexpresso)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Kotlin](https://img.shields.io/badge/Kotlin-1.8.20-7F52FF?logo=kotlin)](https://kotlinlang.org)
+[![API docs](https://img.shields.io/badge/API_docs-Dokka-blue)](https://elzinko.github.io/kexpresso/)
 
 ---
 
