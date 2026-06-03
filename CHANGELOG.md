@@ -11,6 +11,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **DSL completions** — new primitives and anchor on `KexpressoBuilder`:
+  - `lowercaseLetter()` → `[a-z]`
+  - `alphanumeric()` → `[a-zA-Z0-9]`
+  - `tab()` → `\t`, `newline()` → `\n`, `carriageReturn()` → `\r`
+  - `nonWordBoundary()` → `\B`
+- **Composition & escape hatch** — new methods on `KexpressoBuilder`:
+  - `raw(pattern)` — inserts a raw regex fragment verbatim (no escaping).
+  - `include(pattern)` — embeds a compiled `KexpressoPattern` as a non-capturing group,
+    enabling sub-patterns to be defined once and reused safely.
+  - `backreference(n: Int)` — numeric back-reference `\n` (requires n ≥ 1).
+  - `backreference(name: String)` — named back-reference `\k<name>`.
+  - Both `backreference(name)` and `capture(name, block)` now validate the group name
+    eagerly and throw `IllegalArgumentException` with a clear message instead of a
+    later `PatternSyntaxException`.
+- **String-operations API** — new methods on `KexpressoPattern` delegating to the
+  underlying `Regex`:
+  - `replaceFirst(input, replacement)` — replace the first match.
+  - `replaceAll(input, replacement)` — replace all matches with a fixed string.
+  - `replaceAll(input, transform)` — replace all matches using a per-match transform.
+  - `split(input, limit)` — split the input around pattern matches.
+  - `matchEntire(input)` — attempt a full-string match, returning `MatchResult?`.
 - **Lookaround support** — `followedBy`, `notFollowedBy`, `precededBy`, `notPrecededBy`
   (positive/negative lookahead and lookbehind).
 - **Distribution & release pipeline** — the library is now publishable:

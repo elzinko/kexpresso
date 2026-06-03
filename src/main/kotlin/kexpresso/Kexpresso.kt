@@ -103,6 +103,98 @@ class KexpressoPattern(
      */
     fun toPattern(): java.util.regex.Pattern = regex.toPattern()
 
+    /**
+     * Replaces the first occurrence of this pattern in [input] with [replacement].
+     *
+     * Group references in [replacement] use the `$1`, `$2`, `${name}` syntax
+     * as supported by [Regex.replaceFirst].
+     *
+     * Example:
+     * ```kotlin
+     * val roast = kexpresso { oneOrMore { letter() } }
+     * roast.replaceFirst("Espresso Latte", "Americano") // "Americano Latte"
+     * ```
+     *
+     * @param input the character sequence to search.
+     * @param replacement the replacement string.
+     * @return the resulting string with the first match replaced.
+     */
+    fun replaceFirst(input: CharSequence, replacement: String): String =
+        regex.replaceFirst(input.toString(), replacement)
+
+    /**
+     * Replaces all occurrences of this pattern in [input] with [replacement].
+     *
+     * Group references in [replacement] use the `$1`, `$2`, `${name}` syntax
+     * as supported by [Regex.replace].
+     *
+     * Example:
+     * ```kotlin
+     * val roast = kexpresso { oneOrMore { letter() } }
+     * roast.replaceAll("Espresso Latte", "Brew") // "Brew Brew"
+     * ```
+     *
+     * @param input the character sequence to search.
+     * @param replacement the replacement string.
+     * @return the resulting string with all matches replaced.
+     */
+    fun replaceAll(input: CharSequence, replacement: String): String =
+        regex.replace(input.toString(), replacement)
+
+    /**
+     * Replaces all occurrences of this pattern in [input] using the [transform] function.
+     *
+     * [transform] is called for each [MatchResult] and its return value is used as the
+     * replacement text for that match.
+     *
+     * Example:
+     * ```kotlin
+     * val drink = kexpresso { oneOrMore { letter() } }
+     * drink.replaceAll("espresso latte") { it.value.uppercase() } // "ESPRESSO LATTE"
+     * ```
+     *
+     * @param input the character sequence to search.
+     * @param transform function that maps each [MatchResult] to its replacement text.
+     * @return the resulting string with all matches replaced by the transform output.
+     */
+    fun replaceAll(input: CharSequence, transform: (MatchResult) -> CharSequence): String =
+        regex.replace(input, transform)
+
+    /**
+     * Splits [input] around matches of this pattern and returns the resulting list of strings.
+     *
+     * Example:
+     * ```kotlin
+     * val separator = kexpresso { literal(", ") }
+     * separator.split("Espresso, Latte, Cappuccino") // ["Espresso", "Latte", "Cappuccino"]
+     * ```
+     *
+     * @param input the character sequence to split.
+     * @param limit the maximum number of resulting substrings. `0` (default) means no limit.
+     * @return the list of substrings obtained by splitting [input].
+     */
+    fun split(input: CharSequence, limit: Int = 0): List<String> =
+        regex.split(input, limit)
+
+    /**
+     * Attempts to match the entire [input] against this pattern, returning a [MatchResult]
+     * on success or null if the input does not fully match.
+     *
+     * Unlike [find], the pattern must cover the whole input.
+     *
+     * Example:
+     * ```kotlin
+     * val order = kexpresso { oneOrMore { letter() } }
+     * order.matchEntire("Espresso")?.value // "Espresso"
+     * order.matchEntire("Espresso42")      // null (digits are not letters)
+     * ```
+     *
+     * @param input the character sequence to match against.
+     * @return a [MatchResult] if the entire [input] matches, otherwise null.
+     */
+    fun matchEntire(input: CharSequence): MatchResult? =
+        regex.matchEntire(input)
+
     /** Returns the raw regex source string. */
     override fun toString(): String = source
 
@@ -113,6 +205,20 @@ class KexpressoPattern(
     }
 
     override fun hashCode(): Int = 31 * source.hashCode() + options.hashCode()
+}
+
+/**
+ * Validates a regex group name and throws [IllegalArgumentException] if invalid.
+ *
+ * The JVM regex engine requires group names to start with a Latin letter and consist
+ * of only Latin letters and ASCII digits — underscores are **not** accepted by
+ * [java.util.regex.Pattern] at compile time.
+ */
+private fun requireValidGroupName(name: String) {
+    require(name.matches(Regex("[a-zA-Z][a-zA-Z0-9]*"))) {
+        "Invalid group name '$name': must start with a letter and contain only letters or digits " +
+            "(the JVM regex engine does not allow underscores in group names)."
+    }
 }
 
 /**
@@ -276,6 +382,26 @@ class KexpressoBuilder {
     /** Matches a word boundary (`\b`). */
     fun wordBoundary(): KexpressoBuilder = append("\\b")
 
+    // ── completions ──────────────────────────────────────────────────────────
+
+    /** Matches a non-word boundary (`\B`). */
+    fun nonWordBoundary(): KexpressoBuilder = append("\\B")
+
+    /** Matches any lowercase ASCII letter (`[a-z]`). */
+    fun lowercaseLetter(): KexpressoBuilder = append("[a-z]")
+
+    /** Matches any ASCII letter or digit (`[a-zA-Z0-9]`). */
+    fun alphanumeric(): KexpressoBuilder = append("[a-zA-Z0-9]")
+
+    /** Matches a horizontal tab character (`\t`). */
+    fun tab(): KexpressoBuilder = append("\\t")
+
+    /** Matches a newline character (`\n`). */
+    fun newline(): KexpressoBuilder = append("\\n")
+
+    /** Matches a carriage-return character (`\r`). */
+    fun carriageReturn(): KexpressoBuilder = append("\\r")
+
     // ── quantifiers ──────────────────────────────────────────────────────────
 
     /**
@@ -375,10 +501,17 @@ class KexpressoBuilder {
     /**
      * Wraps the [block] pattern in a named capturing group (`(?<name>...)`).
      *
+     * The [name] must start with a Latin letter and contain only Latin letters or ASCII digits.
+     * Note: the JVM regex engine does **not** allow underscores in named group names.
+     * An invalid name throws [IllegalArgumentException] immediately at the call site rather
+     * than producing an obscure [java.util.regex.PatternSyntaxException] later.
+     *
      * @param name the capture group name.
      * @param block the pattern to capture.
+     * @throws IllegalArgumentException if [name] is not a valid group name.
      */
     fun capture(name: String, block: KexpressoBuilder.() -> Unit): KexpressoBuilder {
+        requireValidGroupName(name)
         return append("(?<$name>${renderBlock(block)})")
     }
 
@@ -462,4 +595,96 @@ class KexpressoBuilder {
      */
     fun notPrecededBy(block: KexpressoBuilder.() -> Unit): KexpressoBuilder =
         append("(?<!${renderBlock(block)})")
+
+    // ── composition & escape hatch ────────────────────────────────────────────
+
+    /**
+     * Appends [pattern] verbatim to the current pattern without any escaping or wrapping.
+     *
+     * **Warning:** the string is inserted as-is. Any regex metacharacters in [pattern]
+     * will be interpreted by the regex engine. Use this only when you need to inject
+     * a raw regex fragment that the DSL does not yet cover; prefer the typed DSL methods
+     * whenever possible.
+     *
+     * Example:
+     * ```kotlin
+     * val p = kexpresso { raw("\\d{4}-\\d{2}-\\d{2}") }
+     * p.matches("2026-06-03") // true
+     * ```
+     *
+     * @param pattern the raw regex string to append verbatim.
+     */
+    fun raw(pattern: String): KexpressoBuilder = append(pattern)
+
+    /**
+     * Appends a numeric back-reference (`\n`) that matches the same text captured by
+     * the [n]th capturing group.
+     *
+     * Example — detect repeated words:
+     * ```kotlin
+     * val repeated = kexpresso {
+     *     capture { oneOrMore { wordChar() } }
+     *     whitespace()
+     *     backreference(1)
+     * }
+     * repeated.containsMatchIn("latte latte") // true
+     * repeated.containsMatchIn("latte mocha") // false
+     * ```
+     *
+     * @param n the 1-based index of the capturing group to reference. Must be >= 1.
+     * @throws IllegalArgumentException if [n] is less than 1.
+     */
+    fun backreference(n: Int): KexpressoBuilder {
+        require(n >= 1) { "Back-reference index must be >= 1, but was $n." }
+        return append("\\$n")
+    }
+
+    /**
+     * Appends a named back-reference (`\k<name>`) that matches the same text captured
+     * by the group named [name].
+     *
+     * The [name] must start with a Latin letter and contain only Latin letters or ASCII digits.
+     * Note: the JVM regex engine does **not** allow underscores in group names.
+     * An invalid name throws [IllegalArgumentException] immediately at the call site.
+     *
+     * Example — detect a repeated drink name:
+     * ```kotlin
+     * val repeated = kexpresso {
+     *     capture("drink") { oneOrMore { letter() } }
+     *     whitespace()
+     *     backreference("drink")
+     * }
+     * repeated.containsMatchIn("Latte Latte") // true
+     * repeated.containsMatchIn("Latte Mocha") // false
+     * ```
+     *
+     * @param name the name of the capturing group to reference.
+     * @throws IllegalArgumentException if [name] is not a valid group name.
+     */
+    fun backreference(name: String): KexpressoBuilder {
+        requireValidGroupName(name)
+        return append("\\k<$name>")
+    }
+
+    /**
+     * Embeds the given [pattern] as a non-capturing group (`(?:...)`), preserving its
+     * precedence and allowing it to be safely combined with quantifiers and other
+     * sub-patterns.
+     *
+     * Use this to define a sub-pattern once and reuse it in multiple places.
+     *
+     * Example:
+     * ```kotlin
+     * val octet = kexpresso { between(1, 3) { digit() } }
+     * val ip = kexpresso {
+     *     include(octet)
+     *     exactly(3) { char('.'); include(octet) }
+     * }
+     * ip.matches("192.168.1.1") // true
+     * ```
+     *
+     * @param pattern the compiled [KexpressoPattern] to embed.
+     */
+    fun include(pattern: KexpressoPattern): KexpressoBuilder =
+        append("(?:${pattern.source})")
 }
