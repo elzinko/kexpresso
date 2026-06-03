@@ -335,6 +335,45 @@ class KexpressoBuilderTest {
         assertFalse(p.matches("_"))
     }
 
+    // ── lookarounds ──────────────────────────────────────────────────────────
+
+    @Test
+    fun `followedBy positive lookahead matches digits before ml`() {
+        val p = pattern { oneOrMore { digit() }; followedBy { literal("ml") } }
+        assertEquals("250", p.find("250ml")?.value)
+        assertNull(p.find("250g"))
+    }
+
+    @Test
+    fun `notFollowedBy negative lookahead matches Espresso not followed by Martini`() {
+        val p = pattern { literal("Espresso"); notFollowedBy { literal("Martini") } }
+        assertTrue(p.containsMatchIn("Espresso!"))
+        assertFalse(p.containsMatchIn("EspressoMartini"))
+    }
+
+    @Test
+    fun `precededBy positive lookbehind matches digits after dollar sign`() {
+        val p = pattern { precededBy { literal("\$") }; oneOrMore { digit() } }
+        assertEquals("42", p.find("Total: \$42")?.value)
+        assertNull(p.find("Total: 42"))
+    }
+
+    @Test
+    fun `notPrecededBy negative lookbehind matches digits not after dollar sign`() {
+        // A single digit that is NOT preceded by "$" should match
+        val p = pattern { notPrecededBy { literal("\$") }; digit() }
+        assertNotNull(p.find("Qty: 5"))
+        assertEquals("5", p.find("Qty: 5")?.value)
+        // A single digit immediately preceded by "$" should NOT match
+        assertNull(p.find("\$9"))
+    }
+
+    @Test
+    fun `notFollowedBy source string is correct`() {
+        val p = pattern { notFollowedBy { digit() } }
+        assertEquals("(?!\\d)", p.source)
+    }
+
     // ── build options ─────────────────────────────────────────────────────────
 
     @Test

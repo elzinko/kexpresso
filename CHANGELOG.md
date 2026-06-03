@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Lookaround support** — `followedBy`, `notFollowedBy`, `precededBy`, `notPrecededBy`
+  (positive/negative lookahead and lookbehind).
 - **Distribution & release pipeline** — the library is now publishable:
   - Consumable via [JitPack](https://jitpack.io/#elzinko/kexpresso) as
     `com.github.elzinko:kexpresso:<tag>` (`jitpack.yml`, JDK 17).

@@ -392,4 +392,74 @@ class KexpressoBuilder {
         val alternatives = blocks.joinToString("|") { renderBlock(it) }
         return append(nonCaptureGroup(alternatives))
     }
+
+    // ── lookarounds ──────────────────────────────────────────────────────────
+
+    /**
+     * Asserts that the current position is immediately followed by the pattern
+     * produced by [block], without consuming any characters (positive lookahead `(?=...)`).
+     *
+     * Example:
+     * ```kotlin
+     * // Match digits only when followed by "ml"
+     * val p = kexpresso { oneOrMore { digit() }; followedBy { literal("ml") } }
+     * p.find("250ml")?.value // "250"
+     * p.find("250g")         // null
+     * ```
+     *
+     * @param block the pattern that must appear immediately after the current position.
+     */
+    fun followedBy(block: KexpressoBuilder.() -> Unit): KexpressoBuilder =
+        append("(?=${renderBlock(block)})")
+
+    /**
+     * Asserts that the current position is NOT immediately followed by the pattern
+     * produced by [block], without consuming any characters (negative lookahead `(?!...)`).
+     *
+     * Example:
+     * ```kotlin
+     * // Match "Espresso" only when NOT followed by "Martini"
+     * val p = kexpresso { literal("Espresso"); notFollowedBy { literal("Martini") } }
+     * p.containsMatchIn("Espresso!")       // true
+     * p.containsMatchIn("EspressoMartini") // false
+     * ```
+     *
+     * @param block the pattern that must NOT appear immediately after the current position.
+     */
+    fun notFollowedBy(block: KexpressoBuilder.() -> Unit): KexpressoBuilder =
+        append("(?!${renderBlock(block)})")
+
+    /**
+     * Asserts that the current position is immediately preceded by the pattern
+     * produced by [block], without consuming any characters (positive lookbehind `(?<=...)`).
+     *
+     * Example:
+     * ```kotlin
+     * // Match digits only when preceded by "$"
+     * val p = kexpresso { precededBy { literal("\$") }; oneOrMore { digit() } }
+     * p.find("Total: \$42")?.value // "42"
+     * p.find("Total: 42")         // null
+     * ```
+     *
+     * @param block the pattern that must appear immediately before the current position.
+     */
+    fun precededBy(block: KexpressoBuilder.() -> Unit): KexpressoBuilder =
+        append("(?<=${renderBlock(block)})")
+
+    /**
+     * Asserts that the current position is NOT immediately preceded by the pattern
+     * produced by [block], without consuming any characters (negative lookbehind `(?<!...)`).
+     *
+     * Example:
+     * ```kotlin
+     * // Match digits only when NOT preceded by "$"
+     * val p = kexpresso { notPrecededBy { literal("\$") }; oneOrMore { digit() } }
+     * p.find("Qty: 42")       // MatchResult("42")
+     * p.find("Total: \$42")   // null (digits are preceded by "$")
+     * ```
+     *
+     * @param block the pattern that must NOT appear immediately before the current position.
+     */
+    fun notPrecededBy(block: KexpressoBuilder.() -> Unit): KexpressoBuilder =
+        append("(?<!${renderBlock(block)})")
 }
