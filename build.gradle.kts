@@ -1,6 +1,7 @@
 plugins {
     kotlin("jvm") version "1.8.20"
     id("io.gitlab.arturbosch.detekt") version "1.23.6"
+    id("org.jetbrains.dokka") version "1.9.20"
     jacoco
     `java-library`
 }
