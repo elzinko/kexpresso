@@ -11,6 +11,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Typed captures API** (`Captures.kt`) — ergonomic, type-safe extraction of named and
+  indexed capture groups from any `MatchResult` via the new `MatchResult.captures` extension
+  property. `Captures` exposes:
+  - Nullable accessors by name — `string(name)`, `int(name)`, `long(name)`, `double(name)`,
+    `boolean(name)` — returning `null` when the group is absent, unmatched, or its value
+    cannot be parsed.
+  - Nullable accessors by index (0 = whole match, 1 = first group, …) — same five types.
+  - Throwing variants by name — `stringOrThrow`, `intOrThrow`, `longOrThrow`, `doubleOrThrow`,
+    `booleanOrThrow` — each throwing `NoSuchElementException` if the group is absent, and
+    `NumberFormatException` / `IllegalArgumentException` (with a message naming the group and
+    the offending value) if the value cannot be parsed.
+  - Example: `pattern.find("2026-06-03")?.captures?.int("year")` → `2026`.
 - **AST-backed internal representation** (`Ast.kt`) — the builder now assembles a small
   `sealed` `RegexNode` hierarchy (`SequenceNode`, `Token`, `Literal`, `Raw`, `Quantifier`,
   `Group`, `Alternation`, `Lookaround`, `Backreference`) instead of concatenating a string.
