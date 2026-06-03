@@ -475,6 +475,60 @@ result?.groups?.get("drink")?.value // "Latte"
 result?.groups?.get("size")?.value  // "Large"
 ```
 
+### Typed captures
+
+Reading captured groups from a `MatchResult` is normally verbose and stringly-typed:
+`result.groups["year"]?.value?.toInt()`. The `Captures` API wraps any `MatchResult` and
+provides type-safe accessors:
+
+```kotlin
+val datePattern = kexpresso {
+    capture("year")  { exactly(4) { digit() } }
+    literal("-")
+    capture("month") { exactly(2) { digit() } }
+    literal("-")
+    capture("day")   { exactly(2) { digit() } }
+}
+
+val caps = datePattern.find("2026-06-03")?.captures
+caps?.int("year")   // 2026
+caps?.int("month")  // 6
+caps?.int("day")    // 3
+caps?.string("day") // "03"
+```
+
+Use `...OrThrow` variants when the group is guaranteed to be present — they give clear
+error messages instead of silent `null`s:
+
+```kotlin
+val pricePattern = kexpresso {
+    literal("\$")
+    capture("dollars") { oneOrMore { digit() } }
+}
+
+val caps = pricePattern.find("\$42")?.captures ?: error("no match")
+caps.intOrThrow("dollars")    // 42
+caps.intOrThrow("missing")    // throws NoSuchElementException: "Named group 'missing'…"
+caps.intOrThrow("dollars")    // throws NumberFormatException if value isn't an Int
+```
+
+**By index** — index `0` is the whole match, `1` is the first capturing group, etc.:
+
+```kotlin
+val pricePattern = kexpresso {
+    literal("\$")
+    capture { oneOrMore { digit() } }
+}
+val caps = pricePattern.find("\$42")?.captures
+caps?.string(0) // "\$42"  — whole match
+caps?.int(1)    // 42      — first capture group
+```
+
+**Supported types** — `string`, `int`, `long`, `double`, `boolean` (strict: `"true"`/`"false"` only).
+All nullable variants return `null` on absent/unparseable values; `...OrThrow` variants throw
+`NoSuchElementException`, `NumberFormatException`, or `IllegalArgumentException` with a message
+that names the group and the offending value.
+
 ### Inspecting the pattern
 
 ```kotlin
