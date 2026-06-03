@@ -11,6 +11,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **AST-backed internal representation** (`Ast.kt`) — the builder now assembles a small
+  `sealed` `RegexNode` hierarchy (`SequenceNode`, `Token`, `Literal`, `Raw`, `Quantifier`,
+  `Group`, `Alternation`, `Lookaround`, `Backreference`) instead of concatenating a string.
+  Each node renders to the **exact same** regex `source` (byte-for-byte identical, the full
+  test suite is the regression net) and additionally carries enough structure to describe
+  itself. This is the "AST spine" the roadmap calls the backbone of 1.0 — it unlocks
+  introspection features without changing the public API or output.
+- **`KexpressoPattern.describe()`** — returns a readable, deterministic English description of
+  a pattern derived from its AST, e.g.
+  `kexpresso { startOfText(); oneOrMore { digit() }; endOfText() }.describe()` →
+  `"start of text, one or more of (a digit), end of text"`. Domain/helper fragments degrade
+  gracefully to ``raw regex `…` ``. The public two-argument `KexpressoPattern(source, regex)`
+  constructor is preserved and falls back to a `Raw(source)` AST node.
 - **ReDoS analysis API** (`Analysis.kt`) — best-effort static heuristic for
   catastrophic-backtracking risk, accessible via `KexpressoPattern.analyze()` and the
   convenience property `KexpressoPattern.isPotentiallyVulnerable`.

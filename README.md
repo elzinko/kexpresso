@@ -484,6 +484,22 @@ p.source  // "\\d[a-zA-Z]"   — raw regex string
 p.options // emptySet()       — Set<RegexOption>
 ```
 
+### Explain a pattern (`describe()`)
+
+Every pattern can explain itself in plain English. `describe()` walks the internal AST
+(the same representation that renders the regex) and returns a deterministic, comma-joined
+phrase — handy for code review, logging, or learning what a pattern does:
+
+```kotlin
+val p = kexpresso { startOfText(); oneOrMore { digit() }; endOfText() }
+
+p.source     // "\\A(?:\\d)+\\z"
+p.describe() // "start of text, one or more of (a digit), end of text"
+```
+
+Domain helpers (e.g. `email()`) are emitted as raw fragments, so they describe as
+``raw regex `…` `` rather than a fully decomposed phrase.
+
 ### Interoperability
 
 ```kotlin
