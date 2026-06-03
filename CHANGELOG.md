@@ -9,7 +9,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-_Nothing yet._
+### Added
+
+- **Reverse API** (`Reverse.kt`) — read an existing raw regex back into kexpresso.
+  - `Kexpresso.from(regex)` compiles the regex **verbatim** (so matching is *always exact* —
+    `Kexpresso.from(r).matches(x) == Regex(r).matches(x)` for every input) and best-effort parses
+    it into the internal AST to power `describe()` and `toKexpressoCode()`. An invalid regex
+    propagates `PatternSyntaxException`, exactly as `Regex(...)` would.
+  - `KexpressoPattern.toKexpressoCode()` emits compilable kexpresso DSL Kotlin source for **any**
+    pattern — builder-made or `from`-parsed — enabling round-tripping. Recognised tokens map to
+    their friendly DSL call (e.g. `\d` → `digit()`, `[a-zA-Z]` → `letter()`); literals,
+    quantifiers, groups, lookarounds, alternation, and back-references map to their DSL forms.
+  - The parser models the common constructs and **honestly degrades anything it does not model to
+    `raw("…")`** (possessive quantifiers like `a++`, atomic groups `(?>…)`, inline-flag groups
+    `(?i)`, unmodeled classes). Best-effort parsing never alters match behaviour and never throws
+    on a valid regex.
 
 ---
 

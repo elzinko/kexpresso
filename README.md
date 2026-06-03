@@ -628,6 +628,41 @@ and performance testing.
 
 ---
 
+## Reverse: read an existing regex
+
+Inherited a cryptic regex? `Kexpresso.from(...)` reads it back: it compiles the regex and
+lets you **explain** it (`describe()`) or **rewrite** it as kexpresso DSL (`toKexpressoCode()`).
+
+```kotlin
+val pattern = Kexpresso.from("\\d{4}-\\d{2}-\\d{2}")
+
+pattern.describe()
+// "exactly 4 of (a digit), the literal "-", exactly 2 of (a digit), the literal "-", exactly 2 of (a digit)"
+
+println(pattern.toKexpressoCode())
+// kexpresso {
+//     exactly(4) { digit() }
+//     literal("-")
+//     exactly(2) { digit() }
+//     literal("-")
+//     exactly(2) { digit() }
+// }
+```
+
+`toKexpressoCode()` works on **any** `KexpressoPattern` — whether you built it with the DSL or
+parsed it with `from` — so you can round-trip between the two representations.
+
+**Matching is always exact; parsing is best-effort.** `Kexpresso.from(r)` compiles `r`
+verbatim, so `Kexpresso.from(r).matches(x)` is *always* identical to `Regex(r).matches(x)`.
+The structural parse that powers `describe()` and `toKexpressoCode()` models the common
+constructs (literals, predefined classes, anchors, quantifiers, groups, lookarounds,
+alternation, back-references) and **honestly degrades anything it doesn't model to `raw("…")`**
+(e.g. possessive quantifiers, atomic groups `(?>…)`, inline-flag groups `(?i)`). The generated
+code stays compilable and never changes match behaviour. An invalid regex throws
+`PatternSyntaxException`, exactly as `Regex(...)` would.
+
+---
+
 ## Building and contributing
 
 ```bash
