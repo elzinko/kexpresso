@@ -345,6 +345,49 @@ paragraphPattern.matches("latte is lowercase.")                 // false
 > word must be at least two characters long (one uppercase letter followed by at least one
 > alphanumeric character).
 
+### Ready-to-use patterns
+
+These helpers in `Domains.kt` let you match common real-world formats in one call.
+Pair with `startOfText()`/`endOfText()` for whole-string validation.
+
+| Helper | Matches | Caveats |
+|---|---|---|
+| `ipv4()` | IPv4 address, e.g. `192.168.1.1` | Decimal only; no CIDR notation |
+| `uuid()` | RFC 4122 UUID versions 1–5, e.g. `550e8400-e29b-41d4-a716-446655440000` | Nil UUID and versions 6+ rejected |
+| `slug()` | URL/CMS slug, e.g. `cold-brew` | Lowercase only; no underscores |
+| `hexColor()` | CSS hex color `#RGB`, `#RGBA`, `#RRGGBB`, `#RRGGBBAA`, e.g. `#1a2b3c` | 5- and 7-digit forms are invalid CSS and do not match |
+| `semanticVersion()` | SemVer 2.0.0 string, e.g. `1.0.0-rc.1+build.42` | No leading `v`; partial forms like `1.0` rejected |
+| `isoDate()` | ISO-8601 date `YYYY-MM-DD`, e.g. `2024-01-15` | Does NOT validate day-of-month (Feb 30 passes) |
+| `isoTime()` | ISO-8601 time `HH:MM[:SS][Z\|±HH:MM]`, e.g. `14:30:00Z` | Leap seconds and fractional seconds not supported |
+| `integerNumber()` | Signed/unsigned integer without leading zeros, e.g. `-7`, `42` | No upper bound on digit count |
+| `decimalNumber()` | Decimal with optional fractional part, e.g. `3.14`, `-0.5` | Bare `.5` and scientific notation not supported |
+| `hashtag()` | Social-media hashtag `#word`, e.g. `#Espresso` | First char after `#` must be a letter, not a digit |
+| `mention()` | @mention (Twitter/X), 1–50 chars, e.g. `@barista` | Other platforms may allow longer names |
+| `e164Phone()` | E.164 phone number, e.g. `+14155552671` | Compact form only — no separators; no country-code validation |
+
+**Example — validate an IPv4 address:**
+
+```kotlin
+val ipValidator = kexpresso {
+    startOfText()
+    ipv4()
+    endOfText()
+}
+
+ipValidator.matches("192.168.1.1") // true
+ipValidator.matches("256.0.0.1")   // false — octet out of range
+```
+
+**Example — extract all hashtags from a post:**
+
+```kotlin
+val hashtagPattern = kexpresso { hashtag() }
+
+val post = "Loving my #Espresso and #ColdBrew today! #Coffee"
+val tags = hashtagPattern.findAll(post).map { it.value }.toList()
+// ["#Espresso", "#ColdBrew", "#Coffee"]
+```
+
 ---
 
 ## Working with results

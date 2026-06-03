@@ -15,6 +15,7 @@ style:
 complexity:
   TooManyFunctions:
     active: true
+    thresholdInFiles: 20
     thresholdInClasses: 25
     thresholdInObjects: 25
 
