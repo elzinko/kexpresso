@@ -9,7 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-_Nothing yet._
+### Added
+
+- **Distribution & release pipeline** — the library is now publishable:
+  - Consumable via [JitPack](https://jitpack.io/#elzinko/kexpresso) as
+    `com.github.elzinko:kexpresso:<tag>` (`jitpack.yml`, JDK 17).
+  - `maven-publish` configuration producing a main jar, a sources jar, and a
+    Dokka-generated javadoc jar, with a complete POM (license, developer, SCM).
+  - Tag-driven **Release** workflow (`v*.*.*`) that builds, publishes to
+    GitHub Packages, and creates a GitHub Release with generated notes.
+  - Release version is injected via `-PreleaseVersion=<tag>`.
 
 ---
 
