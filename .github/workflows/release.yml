@@ -50,16 +50,21 @@ jobs:
           GITHUB_ACTOR: ${{ github.actor }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      # Under the Kotlin Multiplatform build, build/libs holds per-target artifacts:
+      # kexpresso-jvm-<v>.jar, the metadata/sources jars, and the JS kexpresso-js-<v>.klib.
+      # The *.jar / *.klib globs below resolve to all of them.
       - name: Generate checksums
         run: |
           cd build/libs
-          sha256sum *.jar > SHA256SUMS.txt
+          sha256sum *.jar *.klib > SHA256SUMS.txt
           cat SHA256SUMS.txt
 
       - name: Attest build provenance
         uses: actions/attest-build-provenance@a2bbfa25375fe432b6a289bc6b6cd05ecd0c4c32 # v4.1.0
         with:
-          subject-path: 'build/libs/*.jar'
+          subject-path: |
+            build/libs/*.jar
+            build/libs/*.klib
 
       - name: Create GitHub Release
         if: github.event_name == 'push'
@@ -70,4 +75,5 @@ jobs:
             --title "${GITHUB_REF_NAME}" \
             --generate-notes \
             build/libs/*.jar \
+            build/libs/*.klib \
             build/libs/SHA256SUMS.txt

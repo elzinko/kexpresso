@@ -99,6 +99,66 @@ dependencies {
 </dependency>
 ```
 
+### Multiplatform
+
+Kexpresso is a **Kotlin Multiplatform** library. The full DSL is written in
+`commonMain`, so the builder, `describe()`, `analyze()`, captures, and the reverse
+(regex → DSL) API are available on every supported target:
+
+| Target   | Status      |
+| -------- | ----------- |
+| JVM      | ✅ supported |
+| JS (IR)  | ✅ supported |
+
+> Native and Wasm are not built yet — they are a planned follow-up.
+
+For a Gradle Multiplatform consumer, the dependency resolves automatically per target
+via Gradle module metadata:
+
+```kotlin
+kotlin {
+    sourceSets {
+        commonMain.dependencies {
+            implementation("com.github.elzinko:kexpresso:<version>")
+        }
+    }
+}
+```
+
+A **plain-Maven (JVM-only)** consumer must use the target-suffixed coordinate instead:
+
+```xml
+<dependency>
+    <groupId>com.github.elzinko</groupId>
+    <artifactId>kexpresso-jvm</artifactId>
+    <version><!-- version --></version>
+</dependency>
+```
+
+> **Breaking change (since the multiplatform release):** artifact coordinates now carry a
+> target suffix. Gradle resolves `com.github.elzinko:kexpresso:<version>` to the right
+> target automatically through Gradle metadata, but tools that ignore Gradle metadata
+> (e.g. plain Maven) must reference `kexpresso-jvm` directly.
+
+#### Honest platform caveats (JS)
+
+The DSL **builds** the same regex string on every platform, but Kotlin/JS uses the
+**ECMAScript** regex engine rather than the JVM's PCRE engine. A few constructs the DSL
+can emit are **JVM-only at runtime** — they build fine but throw when compiled to a
+`Regex` on JS:
+
+- `startOfText()` / `endOfText()` (the `\A` / `\z` anchors) — use `startOfLine()` /
+  `endOfLine()` (`^` / `$`) for portable code.
+- atomic groups `(?>…)` and possessive quantifiers (`a++`, `a*+`) — these only ever
+  appear via `raw(...)` or `Kexpresso.from(...)`.
+- some lookbehind forms.
+
+Literal escaping is portable: `literal("a.b")` renders as `a\.b` (a per-character
+escaper) rather than the JVM-only `\Qa.b\E`; matching behaviour is identical.
+
+`toPattern()` (conversion to `java.util.regex.Pattern`) is a **JVM-only** extension and is
+not available on JS.
+
 ---
 
 ## Quickstart
@@ -564,9 +624,12 @@ Domain helpers (e.g. `email()`) are emitted as raw fragments, so they describe a
 ```kotlin
 val p = kexpresso { literal("Cappuccino") }
 
-val kotlinRegex:   Regex                  = p.toRegex()
-val javaPattern:   java.util.regex.Pattern = p.toPattern()
+val kotlinRegex:   Regex                  = p.toRegex()           // all targets
+val javaPattern:   java.util.regex.Pattern = p.toPattern()        // JVM only
 ```
+
+> `toRegex()` is available on every target. `toPattern()` is a **JVM-only** extension
+> (`java.util.regex.Pattern` does not exist on Kotlin/JS).
 
 ### RegexOption
 

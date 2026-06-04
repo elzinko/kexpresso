@@ -33,7 +33,8 @@ package kexpresso
  *
  * @param regex the raw regex string to read.
  * @return a [KexpressoPattern] with exact matching and a best-effort AST.
- * @throws java.util.regex.PatternSyntaxException if [regex] is not a valid regular expression.
+ * @throws IllegalArgumentException if [regex] is not a valid regular expression (on the JVM this
+ *   is the more specific `java.util.regex.PatternSyntaxException`, which is a subtype).
  */
 fun Kexpresso.from(regex: String): KexpressoPattern {
     // Compile verbatim — this is the source of truth for matching and may throw on invalid input.

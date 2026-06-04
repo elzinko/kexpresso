@@ -1,6 +1,8 @@
 # JitPack build configuration.
 # Consumers depend on `com.github.elzinko:kexpresso:<tag-or-commit>`.
+# Under Kotlin Multiplatform there is no single `test` task; tests run via `allTests`
+# (jvmTest + jsTest), so the install step excludes that instead.
 jdk:
   - openjdk17
 install:
-  - ./gradlew -PreleaseVersion=$VERSION publishToMavenLocal -x test
+  - ./gradlew -PreleaseVersion=$VERSION publishToMavenLocal -x allTests
