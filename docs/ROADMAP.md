@@ -42,15 +42,20 @@ API docs.
   (The kind of ergonomics that made magic-regexp succeed; it wins the purist.)
 - ⏭️ Deferred: more helpers (`ipv6`, `macAddress`, `base64`, …).
 
+### ✅ 0.4.0 — Read existing regexes + supply-chain hardening
+- ✅ **Reverse** — `Kexpresso.from(regex)` → `describe()` / `toKexpressoCode()`. Matching is
+  always exact; best-effort parse into the `RegexNode` AST, honest `raw()` fallback. The
+  differentiating "killer" feature, built on the AST spine.
+- ✅ **Supply-chain hardening** — CodeQL, OpenSSF Scorecard, Dependabot, SHA-pinned Actions,
+  release provenance + checksums, coverage gate, FUNDING/SECURITY/Code of Conduct.
+
 ### 🔭 Next (toward 1.0.0) — Make it a category
-- 🚧 **Reverse** — `Kexpresso.from("\\d{4}-\\d{2}")` → DSL code + `describe()`. Everyone
-  inherits cryptic regexes; turning them back into readable form is the killer feature.
-  Now feasible: parse a regex string into the existing `RegexNode` AST, then emit DSL. **(in progress)**
-- **`kexpresso-test`** — `pattern.examples(n)` generates strings that match, for tests.
-- **Kotlin Multiplatform** — JVM / JS / Native / WASM. `Regex` is already multiplatform and
+- 🚧 **Kotlin Multiplatform** — JVM / JS / Native / WASM. `Regex` is already multiplatform and
   the DSL is pure string-building, so the port is mostly build setup + isolating the few
-  JVM-only bits (`toPattern()`, fixed-length lookbehind).
-- **Modularization** — `kexpresso-core` / `-analysis` / `-test` / `-kotlinx`.
+  JVM-only bits (`toPattern()`, `MatchNamedGroupCollection`, fixed-length lookbehind). **(next)**
+  Pairs with the deferred Kotlin 2.x / Gradle 9 / Dokka 2 upgrades.
+- **`kexpresso-test`** — `pattern.examples(n)` generates strings that match, for tests.
+- **Modularization** — `kexpresso-core` / `-analysis` / `-test` (likely premature until the lib grows).
 
 ## Assumptions to test (riskiest first)
 

@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+_Nothing yet._
+
+---
+
+## [0.4.0] - 2026-06-03
+
 ### Added
 
 - **Reverse API** (`Reverse.kt`) — read an existing raw regex back into kexpresso.
@@ -24,6 +30,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     `raw("…")`** (possessive quantifiers like `a++`, atomic groups `(?>…)`, inline-flag groups
     `(?i)`, unmodeled classes). Best-effort parsing never alters match behaviour and never throws
     on a valid regex.
+
+### Security
+
+- **Supply-chain & quality hardening** — CodeQL static analysis, OpenSSF Scorecard,
+  Dependabot (Gradle + GitHub Actions), all GitHub Actions pinned to commit SHAs, build
+  provenance attestation + SHA-256 checksums on releases, a private vulnerability reporting
+  policy (`SECURITY.md`), and a JaCoCo coverage gate (line ≥ 85%) enforced in CI.
 
 ---
 
@@ -165,7 +178,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Detekt** — static analysis configuration at `config/detekt/detekt.yml`.
 - **JaCoCo** — test coverage reporting.
 
-[Unreleased]: https://github.com/elzinko/kexpresso/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/elzinko/kexpresso/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/elzinko/kexpresso/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/elzinko/kexpresso/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/elzinko/kexpresso/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/elzinko/kexpresso/releases/tag/v0.1.0
