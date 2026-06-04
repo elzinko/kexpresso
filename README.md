@@ -105,12 +105,20 @@ Kexpresso is a **Kotlin Multiplatform** library. The full DSL is written in
 `commonMain`, so the builder, `describe()`, `analyze()`, captures, and the reverse
 (regex → DSL) API are available on every supported target:
 
-| Target   | Status      |
-| -------- | ----------- |
-| JVM      | ✅ supported |
-| JS (IR)  | ✅ supported |
+| Target                                          | Status      |
+| ----------------------------------------------- | ----------- |
+| JVM                                             | ✅ supported |
+| JS (IR, Node.js)                                | ✅ supported |
+| Wasm (`wasmJs`, Node.js)                        | ✅ supported |
+| Native — `linuxX64`, `mingwX64`                 | ✅ supported |
+| Native — `macosX64`, `macosArm64`               | ✅ supported |
 
-> Native and Wasm are not built yet — they are a planned follow-up.
+> **Built per host.** Kotlin/Native targets can only be cross-compiled from a host of the
+> same family, so the build registers them conditionally on the current OS: macOS hosts build
+> the `macos*` targets, while the Linux CI runner builds `linuxX64` + `mingwX64`. The published
+> artifact set therefore spans every target, assembled across hosts. (Building the `macos*`
+> targets locally requires a full Xcode install — a Command-Line-Tools-only macOS box still
+> builds jvm/js/wasmJs and skips the Apple targets with a warning.)
 
 For a Gradle Multiplatform consumer, the dependency resolves automatically per target
 via Gradle module metadata:
@@ -140,24 +148,36 @@ A **plain-Maven (JVM-only)** consumer must use the target-suffixed coordinate in
 > target automatically through Gradle metadata, but tools that ignore Gradle metadata
 > (e.g. plain Maven) must reference `kexpresso-jvm` directly.
 
-#### Honest platform caveats (JS)
+#### Honest platform caveats (JS / Wasm / Native)
 
-The DSL **builds** the same regex string on every platform, but Kotlin/JS uses the
-**ECMAScript** regex engine rather than the JVM's PCRE engine. A few constructs the DSL
-can emit are **JVM-only at runtime** — they build fine but throw when compiled to a
-`Regex` on JS:
+The DSL **builds** the same regex string on every platform, but each non-JVM target uses its
+own regex engine rather than the JVM's `java.util.regex` (PCRE-like) engine, so the supported
+feature set narrows the further you get from the JVM. The portable common API — primitives,
+quantifiers, character classes, alternation, simple/named groups, named & numeric
+backreferences, lookahead, `\b`, literal escaping, `describe()`, `toKexpressoCode()`, captures,
+and `analyze()` — works **everywhere**. Some JVM-flavoured constructs remain **JVM-only at
+runtime**: they build fine but throw when compiled to a `Regex` on the smaller engines.
 
-- `startOfText()` / `endOfText()` (the `\A` / `\z` anchors) — use `startOfLine()` /
-  `endOfLine()` (`^` / `$`) for portable code.
-- atomic groups `(?>…)` and possessive quantifiers (`a++`, `a*+`) — these only ever
-  appear via `raw(...)` or `Kexpresso.from(...)`.
-- some lookbehind forms.
+- **JS (ECMAScript engine):** the most restrictive. `startOfText()` / `endOfText()` (the
+  `\A` / `\z` anchors) are **not** valid ECMAScript — use `startOfLine()` / `endOfLine()`
+  (`^` / `$`) for portable code. Atomic groups `(?>…)`, possessive quantifiers (`a++`, `a*+`),
+  and some lookbehind forms are also JVM-only and only ever appear via `raw(...)` or
+  `Kexpresso.from(...)`.
+- **Wasm (`wasmJs`):** runs on the same ECMAScript engine via the host; same caveats as JS.
+- **Native (`kotlin.text.Regex`):** ships a capable pure-Kotlin engine that is actually a
+  *superset* of ECMAScript here — it accepts the `\A` / `\z` / `\Z` / `\G` anchors, named
+  groups, named/numeric backreferences, lookahead, lookbehind, and atomic groups. Even so,
+  treat the JVM as the reference engine; exotic PCRE-only constructs reachable via `raw(...)`
+  may still differ.
+
+The whole `commonTest` portable suite (31 tests) passes identically on JVM, JS, Wasm, and the
+built native targets. JVM-only constructs are exercised in the JVM-only `jvmTest` suite.
 
 Literal escaping is portable: `literal("a.b")` renders as `a\.b` (a per-character
-escaper) rather than the JVM-only `\Qa.b\E`; matching behaviour is identical.
+escaper) rather than the JVM-only `\Qa.b\E`; matching behaviour is identical everywhere.
 
 `toPattern()` (conversion to `java.util.regex.Pattern`) is a **JVM-only** extension and is
-not available on JS.
+not available on JS, Wasm, or Native.
 
 ---
 
