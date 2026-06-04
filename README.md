@@ -10,6 +10,7 @@
 [![CodeQL](https://github.com/elzinko/kexpresso/actions/workflows/codeql.yml/badge.svg)](https://github.com/elzinko/kexpresso/actions/workflows/codeql.yml)
 [![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/elzinko/kexpresso/badge)](https://scorecard.dev/viewer/?uri=github.com/elzinko/kexpresso)
 [![Coverage](https://img.shields.io/badge/coverage-%E2%89%A585%25%20enforced-brightgreen)](#building-and-contributing)
+[![codecov](https://codecov.io/gh/elzinko/kexpresso/branch/main/graph/badge.svg)](https://codecov.io/gh/elzinko/kexpresso)
 [![Buy me a coffee](https://img.shields.io/badge/Buy%20me%20a%20coffee-%E2%98%95-FFDD00)](https://buymeacoffee.com/elzinko)
 
 ---
