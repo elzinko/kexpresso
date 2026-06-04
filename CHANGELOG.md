@@ -13,8 +13,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Kotlin Multiplatform support (JVM + JS/IR).** The full DSL — builder, `describe()`,
   `analyze()`, typed captures, and the reverse (regex → DSL) API — now lives in `commonMain`
-  and is published for the `jvm` and `js(IR, nodejs)` targets. Native/Wasm remain a planned
-  follow-up. Kotlin was bumped from 1.8.20 to **1.9.24**.
+  and is published for the `jvm` and `js(IR, nodejs)` targets. Kotlin was bumped from 1.8.20 to
+  **1.9.24**.
+- **Native + Wasm targets.** Added `wasmJs(nodejs)` and host-conditional Kotlin/Native targets:
+  `linuxX64` + `mingwX64` on Linux, `macosX64` + `macosArm64` on macOS (each native target can
+  only be cross-compiled from a host of the same family, so they are built per host and the
+  published artifact set is assembled across hosts). The portable `commonTest` suite (31 tests)
+  passes identically on JVM, JS, Wasm, and the built native targets — **no tests needed to move
+  from `commonTest` to `jvmTest`**: the Kotlin/Wasm engine matches ECMAScript and accepts the
+  whole portable suite, and the Kotlin/Native `kotlin.text.Regex` engine is a superset of it
+  (it even accepts the `\A` / `\z` / `\Z` / `\G` anchors, named groups, named/numeric
+  backreferences, lookahead, lookbehind, and atomic groups). JVM-flavoured constructs that the
+  smaller JS/Wasm engine rejects at `Regex` compile time (`\A` / `\z`, atomic groups, possessive
+  quantifiers, some lookbehind) remain JVM-only and continue to be exercised in `jvmTest`.
+  Building the `macos*` targets locally requires a full Xcode install; a Command-Line-Tools-only
+  macOS host still builds jvm/js/wasmJs and skips the Apple targets with a warning.
 
 ### Changed
 

@@ -1,3 +1,6 @@
+import org.gradle.internal.os.OperatingSystem
+import org.jetbrains.kotlin.gradle.targets.js.dsl.ExperimentalWasmDsl
+
 plugins {
     kotlin("multiplatform") version "1.9.24"
     id("io.gitlab.arturbosch.detekt") version "1.23.6"
@@ -16,6 +19,18 @@ repositories {
     mavenCentral()
 }
 
+/**
+ * True only when a *full* Xcode install (not just the Command Line Tools) is present, mirroring
+ * the exact probe Kotlin/Native runs for Apple targets. Used to gate macosArm64/macosX64
+ * registration so a CLT-only macOS host still produces a green `build`.
+ */
+fun isFullXcodeAvailable(): Boolean = runCatching {
+    val process = ProcessBuilder("/usr/bin/xcrun", "xcodebuild", "-version")
+        .redirectErrorStream(true)
+        .start()
+    process.waitFor() == 0
+}.getOrDefault(false)
+
 kotlin {
     jvmToolchain(17)
 
@@ -25,6 +40,49 @@ kotlin {
 
     js(IR) {
         nodejs()
+    }
+
+    // Wasm (wasmJs) — Alpha in Kotlin 1.9.24. Exercises the Kotlin/Wasm regex engine.
+    @OptIn(ExperimentalWasmDsl::class)
+    wasmJs {
+        nodejs()
+    }
+
+    // Host-conditional Kotlin/Native targets. Each native target can only be cross-compiled
+    // from a host of the same family, so we register only the targets the *current* host can
+    // build. The default hierarchy template (Kotlin 1.9.20+) wires commonMain/commonTest into
+    // every registered target automatically — no manual intermediate source sets required.
+    //   • macOS  → macosArm64 + macosX64 (requires a full Xcode install — see guard below)
+    //   • Linux  → linuxX64 + mingwX64 (mingw cross-compiles fine from Linux; this is the CI runner)
+    //   • Windows→ mingwX64
+    val host = OperatingSystem.current()
+    when {
+        host.isMacOsX -> {
+            // Kotlin/Native 1.9.x for Apple targets hard-requires a *full Xcode* install
+            // (it shells out to `xcrun xcodebuild -version`). A Command-Line-Tools-only host
+            // cannot compile/link Apple binaries, and Kotlin/Native fails the whole build with
+            // an opaque "xcrun exit code 72". We therefore register the Apple targets only when
+            // Xcode is actually present, so a CLT-only dev box still gets a green `build`
+            // (jvm + js + wasmJs). A properly provisioned Mac (and macOS CI) builds the Apple
+            // targets normally. Linux/Windows CI never enters this branch.
+            if (isFullXcodeAvailable()) {
+                macosArm64()
+                macosX64()
+            } else {
+                logger.warn(
+                    "Kexpresso: skipping macosArm64/macosX64 targets — no full Xcode install " +
+                        "detected (`xcrun xcodebuild -version` failed). Install Xcode to build " +
+                        "the Apple/Native targets locally; jvm/js/wasmJs are unaffected.",
+                )
+            }
+        }
+        host.isLinux -> {
+            linuxX64()
+            mingwX64()
+        }
+        host.isWindows -> {
+            mingwX64()
+        }
     }
 
     sourceSets {
