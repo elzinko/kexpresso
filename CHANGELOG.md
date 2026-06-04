@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+_Nothing yet._
+
+---
+
+## [0.5.0] - 2026-06-04
+
 ### Added
 
 - **Kotlin Multiplatform support (JVM + JS/IR).** The full DSL — builder, `describe()`,
@@ -54,6 +60,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Published artifact coordinates now carry a target suffix.** Gradle consumers can keep using
   `com.github.elzinko:kexpresso:<version>` (Gradle module metadata resolves the correct target
   automatically), but plain-Maven JVM consumers must switch to `com.github.elzinko:kexpresso-jvm`.
+- **Published vs. buildable targets.** The release/JitPack build runs on Linux, so the
+  *published* artifacts are `jvm`, `js`, `wasmJs`, `linuxX64`, and `mingwX64`. The `macosX64` /
+  `macosArm64` targets are supported and build from source, but pre-built macOS Native artifacts
+  are **not yet published** — publishing them needs a macOS release runner (tracked as a roadmap
+  follow-up).
 - Constructs that the DSL can build but that only run on the JVM regex engine — `startOfText()` /
   `endOfText()` (`\A` / `\z`), atomic groups, possessive quantifiers, and some lookbehind — throw
   at `Regex` compile time on JS. They are JVM-only at runtime; use `startOfLine()` / `endOfLine()`
@@ -226,7 +237,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Detekt** — static analysis configuration at `config/detekt/detekt.yml`.
 - **JaCoCo** — test coverage reporting.
 
-[Unreleased]: https://github.com/elzinko/kexpresso/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/elzinko/kexpresso/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/elzinko/kexpresso/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/elzinko/kexpresso/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/elzinko/kexpresso/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/elzinko/kexpresso/compare/v0.1.0...v0.2.0
