@@ -49,13 +49,22 @@ API docs.
 - ✅ **Supply-chain hardening** — CodeQL, OpenSSF Scorecard, Dependabot, SHA-pinned Actions,
   release provenance + checksums, coverage gate, FUNDING/SECURITY/Code of Conduct.
 
+### ✅ 0.5.0 — Multiplatform (JVM + JS + Wasm + Native)
+- ✅ **Kotlin Multiplatform** — Kotlin 1.9.24; targets `jvm`, `js(IR)`, `wasmJs`, and
+  host-conditional Native (`linuxX64`/`mingwX64` on Linux, `macosX64`/`macosArm64` on macOS).
+  Logic in `commonMain`; `toPattern()` is a JVM-only extension; portable literal escaping. The
+  31-test portable suite passes on JVM/JS/Wasm/Native; JVM-flavoured constructs stay JVM-only.
+- ✅ Tooling: jacoco → Kover, JMH removed (numbers stay in docs), multi-target publishing.
+
 ### 🔭 Next (toward 1.0.0) — Make it a category
-- 🚧 **Kotlin Multiplatform** — JVM / JS / Native / WASM. `Regex` is already multiplatform and
-  the DSL is pure string-building, so the port is mostly build setup + isolating the few
-  JVM-only bits (`toPattern()`, `MatchNamedGroupCollection`, fixed-length lookbehind). **(next)**
-  Pairs with the deferred Kotlin 2.x / Gradle 9 / Dokka 2 upgrades.
+- **Publish macOS/iOS Native artifacts** — the release runs on Linux, so today only
+  jvm/js/wasmJs/linuxX64/mingwX64 are published; macOS Native builds from source only. Add a
+  **macOS release-runner matrix** so the Apple Native publications ship too.
 - **`kexpresso-test`** — `pattern.examples(n)` generates strings that match, for tests.
+- **Kotlin 2.x / Gradle 9 / Dokka 2** upgrades (the Dependabot majors deferred during KMP).
 - **Modularization** — `kexpresso-core` / `-analysis` / `-test` (likely premature until the lib grows).
+- **1.0.0** — once the above land and the new multiplatform coordinates have soaked, cut 1.0
+  with an API-stability commitment + migration notes.
 
 ## Assumptions to test (riskiest first)
 

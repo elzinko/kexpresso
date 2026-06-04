@@ -110,15 +110,20 @@ Kexpresso is a **Kotlin Multiplatform** library. The full DSL is written in
 | JVM                                             | ✅ supported |
 | JS (IR, Node.js)                                | ✅ supported |
 | Wasm (`wasmJs`, Node.js)                        | ✅ supported |
-| Native — `linuxX64`, `mingwX64`                 | ✅ supported |
-| Native — `macosX64`, `macosArm64`               | ✅ supported |
+| Native — `linuxX64`, `mingwX64`                 | ✅ published |
+| Native — `macosX64`, `macosArm64`               | ✅ builds from source¹ |
 
 > **Built per host.** Kotlin/Native targets can only be cross-compiled from a host of the
 > same family, so the build registers them conditionally on the current OS: macOS hosts build
-> the `macos*` targets, while the Linux CI runner builds `linuxX64` + `mingwX64`. The published
-> artifact set therefore spans every target, assembled across hosts. (Building the `macos*`
-> targets locally requires a full Xcode install — a Command-Line-Tools-only macOS box still
-> builds jvm/js/wasmJs and skips the Apple targets with a warning.)
+> the `macos*` targets, while the Linux CI runner builds `linuxX64` + `mingwX64`. (Building the
+> `macos*` targets locally requires a full Xcode install — a Command-Line-Tools-only macOS box
+> still builds jvm/js/wasmJs and skips the Apple targets with a warning.)
+>
+> ¹ **Publishing scope (honest note).** The release pipeline runs on Linux, so the **published**
+> artifacts (GitHub Packages / JitPack) are `jvm`, `js`, `wasmJs`, `linuxX64`, and `mingwX64`.
+> The `macos*` targets compile and pass tests, but **pre-built macOS Native artifacts are not
+> yet published** — that needs a macOS release runner (a tracked roadmap follow-up). Until then,
+> macOS Native consumers build kexpresso from source.
 
 For a Gradle Multiplatform consumer, the dependency resolves automatically per target
 via Gradle module metadata:
