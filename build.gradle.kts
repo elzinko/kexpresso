@@ -51,6 +51,25 @@ tasks.jacocoTestReport {
     }
 }
 
+// Coverage gate: fail the build if line coverage regresses below the floor.
+// Enforces quality natively (no third-party service). Current coverage is ~99%.
+tasks.jacocoTestCoverageVerification {
+    dependsOn(tasks.jacocoTestReport)
+    violationRules {
+        rule {
+            limit {
+                counter = "LINE"
+                value = "COVEREDRATIO"
+                minimum = "0.85".toBigDecimal()
+            }
+        }
+    }
+}
+
+tasks.check {
+    dependsOn(tasks.jacocoTestCoverageVerification)
+}
+
 // A javadoc jar built from Dokka so published artifacts carry browsable API docs.
 val dokkaJavadocJar by tasks.registering(Jar::class) {
     group = "documentation"
