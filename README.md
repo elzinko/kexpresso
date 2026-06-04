@@ -7,6 +7,10 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Kotlin](https://img.shields.io/badge/Kotlin-1.8.20-7F52FF?logo=kotlin)](https://kotlinlang.org)
 [![API docs](https://img.shields.io/badge/API_docs-Dokka-blue)](https://elzinko.github.io/kexpresso/)
+[![CodeQL](https://github.com/elzinko/kexpresso/actions/workflows/codeql.yml/badge.svg)](https://github.com/elzinko/kexpresso/actions/workflows/codeql.yml)
+[![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/elzinko/kexpresso/badge)](https://scorecard.dev/viewer/?uri=github.com/elzinko/kexpresso)
+[![Coverage](https://img.shields.io/badge/coverage-%E2%89%A585%25%20enforced-brightgreen)](#building-and-contributing)
+[![Buy me a coffee](https://img.shields.io/badge/Buy%20me%20a%20coffee-%E2%98%95-FFDD00)](https://buymeacoffee.com/elzinko)
 
 ---
 
@@ -680,6 +684,28 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for the full contributor guide — includ
 add a new DSL primitive.
 
 ---
+
+## Security
+
+Found a vulnerability? Please report it privately — see [SECURITY.md](SECURITY.md). The
+project also runs **CodeQL** static analysis and an **OpenSSF Scorecard** supply-chain check
+on every push, and uses **Dependabot** to keep dependencies and GitHub Actions current.
+
+For catastrophic-backtracking (ReDoS) risk in your own patterns, kexpresso ships a
+best-effort analyzer — see [Safety: ReDoS analysis](#safety-redos-analysis).
+
+## Code of Conduct
+
+This project follows the [Contributor Covenant](CODE_OF_CONDUCT.md). By participating, you
+are expected to uphold it.
+
+## Support
+
+kexpresso is free and open source. If it saves you time, you can say thanks:
+
+[![Buy me a coffee](https://img.shields.io/badge/Buy%20me%20a%20coffee-%E2%98%95-FFDD00?style=for-the-badge)](https://buymeacoffee.com/elzinko)
+
+☕ **<https://buymeacoffee.com/elzinko>** — every coffee fuels another release.
 
 ## License
 
