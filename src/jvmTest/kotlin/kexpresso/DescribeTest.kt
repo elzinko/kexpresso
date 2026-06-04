@@ -182,7 +182,9 @@ class DescribeTest {
             "(?<d>[a-zA-Z])\\k<d>",
             kexpresso { capture("d") { letter() }; backreference("d") }.source,
         )
-        assertEquals("\\Qa-b\\E", kexpresso { literal("a-b") }.source)
+        // Literals now use a portable per-character escaper (not \Q…\E). '-' is not a
+        // metacharacter outside a character class, so "a-b" renders verbatim.
+        assertEquals("a-b", kexpresso { literal("a-b") }.source)
     }
 
     @Test

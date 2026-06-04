@@ -127,11 +127,6 @@ class KexpressoPattern internal constructor(
     fun toRegex(): Regex = regex
 
     /**
-     * Returns a [java.util.regex.Pattern] equivalent to this pattern.
-     */
-    fun toPattern(): java.util.regex.Pattern = regex.toPattern()
-
-    /**
      * Replaces the first occurrence of this pattern in [input] with [replacement].
      *
      * Group references in [replacement] use the `$1`, `$2`, `${name}` syntax
@@ -240,7 +235,7 @@ class KexpressoPattern internal constructor(
  *
  * The JVM regex engine requires group names to start with a Latin letter and consist
  * of only Latin letters and ASCII digits — underscores are **not** accepted by
- * [java.util.regex.Pattern] at compile time.
+ * `java.util.regex.Pattern` at compile time.
  */
 private fun requireValidGroupName(name: String) {
     require(name.matches(Regex("[a-zA-Z][a-zA-Z0-9]*"))) {
@@ -523,7 +518,7 @@ class KexpressoBuilder {
      * The [name] must start with a Latin letter and contain only Latin letters or ASCII digits.
      * Note: the JVM regex engine does **not** allow underscores in named group names.
      * An invalid name throws [IllegalArgumentException] immediately at the call site rather
-     * than producing an obscure [java.util.regex.PatternSyntaxException] later.
+     * than producing an obscure `PatternSyntaxException` later.
      *
      * @param name the capture group name.
      * @param block the pattern to capture.

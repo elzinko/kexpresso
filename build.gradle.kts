@@ -1,10 +1,8 @@
 plugins {
-    kotlin("jvm") version "1.8.20"
+    kotlin("multiplatform") version "1.9.24"
     id("io.gitlab.arturbosch.detekt") version "1.23.6"
     id("org.jetbrains.dokka") version "1.9.20"
-    id("me.champeau.jmh") version "0.7.2"
-    jacoco
-    `java-library`
+    id("org.jetbrains.kotlinx.kover") version "0.7.6"
     `maven-publish`
 }
 
@@ -18,18 +16,27 @@ repositories {
     mavenCentral()
 }
 
-dependencies {
-    testImplementation(kotlin("test"))
-    testImplementation("org.junit.jupiter:junit-jupiter:5.10.2")
-    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
-}
-
 kotlin {
     jvmToolchain(17)
-}
 
-java {
-    withSourcesJar()
+    jvm {
+        withSourcesJar(publish = true)
+    }
+
+    js(IR) {
+        nodejs()
+    }
+
+    sourceSets {
+        commonMain {}
+        commonTest {
+            dependencies {
+                implementation(kotlin("test"))
+            }
+        }
+        jvmMain {}
+        jvmTest {}
+    }
 }
 
 detekt {
@@ -38,68 +45,73 @@ detekt {
     baseline = file("$rootDir/config/detekt/baseline.xml")
 }
 
-tasks.test {
-    useJUnitPlatform()
-    finalizedBy(tasks.jacocoTestReport)
+// Run Detekt over the Kotlin Multiplatform source sets. Under KMP, the detekt plugin registers
+// per-source-set tasks (detektMetadataCommonMain, detektJvmMain, detektJsMain, …) but the plain
+// `detekt` task only scans the legacy src/main + src/test dirs (which no longer exist). We make
+// the aggregate `detekt` task fan out to the per-source-set tasks so `./gradlew build` (via
+// `check`) enforces style on all production + test code across both targets.
+tasks.withType<io.gitlab.arturbosch.detekt.Detekt>().configureEach {
+    jvmTarget = "17"
+    exclude("**/jsMain/**", "**/jsTest/**") // analysed via the metadata/jvm tasks already
 }
 
-tasks.jacocoTestReport {
-    dependsOn(tasks.test)
-    reports {
-        xml.required.set(true)
-        html.required.set(true)
-    }
+val detektSourceSetTasks = listOf(
+    "detektMetadataCommonMain",
+    "detektJvmMain",
+    "detektJvmTest",
+)
+
+tasks.named("detekt") {
+    dependsOn(detektSourceSetTasks)
 }
 
-// Coverage gate: fail the build if line coverage regresses below the floor.
-// Enforces quality natively (no third-party service). Current coverage is ~99%.
-tasks.jacocoTestCoverageVerification {
-    dependsOn(tasks.jacocoTestReport)
-    violationRules {
-        rule {
-            limit {
-                counter = "LINE"
-                value = "COVEREDRATIO"
-                minimum = "0.85".toBigDecimal()
+tasks.named("check") {
+    dependsOn(detektSourceSetTasks)
+}
+
+// ── Coverage gate (Kover) ─────────────────────────────────────────────────────
+// Replaces the former JaCoCo gate. Kover instruments the JVM tests and enforces a
+// line-coverage floor; an XML report is produced for Codecov.
+koverReport {
+    defaults {
+        xml {
+            onCheck = true
+        }
+        html {
+            onCheck = false
+        }
+        verify {
+            rule {
+                bound {
+                    minValue = 85
+                    metric = kotlinx.kover.gradle.plugin.dsl.MetricType.LINE
+                    aggregation = kotlinx.kover.gradle.plugin.dsl.AggregationType.COVERED_PERCENTAGE
+                }
             }
         }
     }
 }
 
-tasks.check {
-    dependsOn(tasks.jacocoTestCoverageVerification)
+// Enforce the coverage gate as part of `check` (and therefore `build`).
+tasks.named("check") {
+    dependsOn(tasks.named("koverVerify"))
 }
 
-// A javadoc jar built from Dokka so published artifacts carry browsable API docs.
-val dokkaJavadocJar by tasks.registering(Jar::class) {
+// A javadoc/html jar built from Dokka so published artifacts carry browsable API docs.
+val dokkaHtmlJar by tasks.registering(Jar::class) {
     group = "documentation"
     description = "Assembles a javadoc jar from the Dokka HTML output."
-    dependsOn(tasks.dokkaJavadoc)
-    from(tasks.dokkaJavadoc.flatMap { it.outputDirectory })
+    dependsOn(tasks.named("dokkaHtml"))
+    from(tasks.named("dokkaHtml"))
     archiveClassifier.set("javadoc")
-}
-
-// ── JMH benchmarks ──────────────────────────────────────────────────────────
-jmh {
-    warmupIterations.set(2)
-    iterations.set(3)
-    fork.set(1)
-    timeOnIteration.set("1s")
-    warmup.set("1s")
-}
-
-// Exclude the JMH source set from Detekt so benchmark boilerplate doesn't
-// fail the style checks that are applied to production code.
-tasks.withType<io.gitlab.arturbosch.detekt.Detekt>().configureEach {
-    exclude("**/jmh/**")
 }
 
 publishing {
     publications {
-        create<MavenPublication>("maven") {
-            from(components["java"])
-            artifact(dokkaJavadocJar)
-            artifactId = "kexpresso"
+        // KMP auto-creates a publication per target (kexpresso, kexpresso-jvm, kexpresso-js)
+        // plus the root metadata publication. Apply the shared POM + the Dokka javadoc jar to all.
+        withType<MavenPublication>().configureEach {
+            artifact(dokkaHtmlJar)
             pom {
                 name.set("Kexpresso")
                 description.set("A fluent Kotlin DSL that makes regular expressions readable.")

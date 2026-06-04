@@ -36,10 +36,11 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@d9c87d481d55275bb5441eef3fe0e46805f9ef70 # v3.5.0
 
-      # Manual build (more reliable than autobuild for Kotlin): compile main + test sources
-      # so CodeQL can extract them.
+      # Manual build (more reliable than autobuild for Kotlin): compile the JVM main + test
+      # sources so CodeQL can extract them. (Multiplatform: there is no `classes` lifecycle
+      # task; use the JVM-target Kotlin compile tasks.)
       - name: Compile
-        run: ./gradlew classes testClasses --no-daemon
+        run: ./gradlew compileKotlinJvm compileTestKotlinJvm --no-daemon
 
       - name: Perform CodeQL analysis
         uses: github/codeql-action/analyze@d77b13a0df3134d64a457ea9003f600b09fa1c8a # v3.36.1

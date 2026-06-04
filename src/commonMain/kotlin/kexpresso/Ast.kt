@@ -45,14 +45,45 @@ internal data class Token(val regex: String, val description: String) : RegexNod
 }
 
 /**
- * An escaped literal string. Renders via [Regex.escape] so meta-characters match verbatim.
+ * An escaped literal string. Renders by backslash-escaping every regex meta-character so the
+ * text matches verbatim.
+ *
+ * The escaping is a hand-written, per-character escaper (rather than `Regex.escape`/`\Q…\E`,
+ * which do not exist on Kotlin/JS) so the generated `source` is portable across the JVM
+ * (PCRE) and JS (ECMAScript) regex engines. For example `a.b` renders as `a\.b`.
  *
  * @property text the plain text to match literally.
  */
 internal data class Literal(val text: String) : RegexNode {
-    override fun render(): String = Regex.escape(text)
+    override fun render(): String = escapeLiteral(text)
 
     override fun describe(): String = "the literal \"$text\""
+}
+
+/**
+ * The set of regex meta-characters that [escapeLiteral] backslash-escapes.
+ *
+ * Includes `/` (harmless on the JVM, required so a literal `/` is safe inside a JS regex
+ * literal) in addition to the standard PCRE/ECMAScript metacharacters.
+ */
+private val LITERAL_META_CHARACTERS: Set<Char> =
+    setOf('\\', '.', '^', '$', '|', '?', '*', '+', '(', ')', '[', ']', '{', '}', '/')
+
+// Note: '-' is intentionally NOT escaped — it is only special inside a character class,
+// and these literals are never emitted inside one.
+
+/**
+ * Backslash-escapes every regex meta-character in [text] so the result matches [text] verbatim
+ * on both the JVM (PCRE) and JS (ECMAScript) regex engines.
+ *
+ * This is a portable, common-source replacement for `Regex.escape()` / `\Q…\E`, which are
+ * JVM-only.
+ */
+internal fun escapeLiteral(text: String): String = buildString(text.length) {
+    for (c in text) {
+        if (c in LITERAL_META_CHARACTERS) append('\\')
+        append(c)
+    }
 }
 
 /**

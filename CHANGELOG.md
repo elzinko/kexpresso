@@ -9,7 +9,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-_Nothing yet._
+### Added
+
+- **Kotlin Multiplatform support (JVM + JS/IR).** The full DSL — builder, `describe()`,
+  `analyze()`, typed captures, and the reverse (regex → DSL) API — now lives in `commonMain`
+  and is published for the `jvm` and `js(IR, nodejs)` targets. Native/Wasm remain a planned
+  follow-up. Kotlin was bumped from 1.8.20 to **1.9.24**.
+
+### Changed
+
+- **Literal escaping is now portable.** `literal(...)` / `char(...)` previously rendered via
+  the JVM-only `Regex.escape()` (`\Q…\E`); they now use a hand-written, per-character escaper
+  that backslash-escapes regex metacharacters. This changes the generated `source` for literals
+  (e.g. `literal("a.b")` now renders as `a\.b` instead of `\Qa.b\E`) — **matching behaviour is
+  unchanged**, only the source string differs.
+- **`KexpressoPattern.toPattern()` is now a JVM-only extension function** (it returns a
+  `java.util.regex.Pattern`, which does not exist on Kotlin/JS). It was previously a member of
+  the common `KexpressoPattern` class. All other public API is unchanged.
+- **Coverage tooling: JaCoCo → Kotlinx Kover.** The coverage gate (line ≥ 85%) is now a Kover
+  verification rule wired into `check`; the XML report for Codecov moved from
+  `build/reports/jacoco/test/jacocoTestReport.xml` to `build/reports/kover/report.xml`.
+
+### Removed
+
+- **JMH benchmark module** (`src/jmh/`) and the `me.champeau.jmh` Gradle plugin. JMH is
+  JVM-only and incompatible with the KMP build model; the benchmark numbers remain documented in
+  `docs/WHEN-TO-USE.md` and `benchmarks/README.md`.
+
+### Breaking
+
+- **Published artifact coordinates now carry a target suffix.** Gradle consumers can keep using
+  `com.github.elzinko:kexpresso:<version>` (Gradle module metadata resolves the correct target
+  automatically), but plain-Maven JVM consumers must switch to `com.github.elzinko:kexpresso-jvm`.
+- Constructs that the DSL can build but that only run on the JVM regex engine — `startOfText()` /
+  `endOfText()` (`\A` / `\z`), atomic groups, possessive quantifiers, and some lookbehind — throw
+  at `Regex` compile time on JS. They are JVM-only at runtime; use `startOfLine()` / `endOfLine()`
+  for portable anchoring.
 
 ---
 
