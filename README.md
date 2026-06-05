@@ -153,6 +153,37 @@ A **plain-Maven (JVM-only)** consumer must use the target-suffixed coordinate in
 > target automatically through Gradle metadata, but tools that ignore Gradle metadata
 > (e.g. plain Maven) must reference `kexpresso-jvm` directly.
 
+#### Where the artifacts are hosted (important for Apple/iOS)
+
+Not every target is available from every repository — choose your source accordingly:
+
+| Repository | Targets served | Auth |
+| --- | --- | --- |
+| **JitPack** (the [Install](#install) section) | `jvm`, `js`, `wasmJs`, `linuxX64`, `mingwX64` | none |
+| **GitHub Packages** | **all targets, incl. `macosX64`/`macosArm64`/`iosArm64`/`iosX64`/`iosSimulatorArm64`** | a GitHub token |
+
+JitPack builds on demand on **Linux**, so it can never produce the Apple/iOS artifacts. Those
+are built and published to **GitHub Packages** by the macOS release runner. **To consume the
+Apple/iOS variants today, use GitHub Packages** (a personal-access token with `read:packages`
+is required even for public packages — a GitHub limitation):
+
+```kotlin
+// settings.gradle.kts
+dependencyResolutionManagement {
+    repositories {
+        maven("https://maven.pkg.github.com/elzinko/kexpresso") {
+            credentials {
+                username = providers.gradleProperty("gpr.user").orNull ?: System.getenv("GITHUB_ACTOR")
+                password = providers.gradleProperty("gpr.key").orNull ?: System.getenv("GITHUB_TOKEN")
+            }
+        }
+    }
+}
+```
+
+> A future **Maven Central** publication (all targets, no auth) is on the roadmap — it needs
+> artifact signing, which isn't wired up yet.
+
 #### Honest platform caveats (JS / Wasm / Native)
 
 The DSL **builds** the same regex string on every platform, but each non-JVM target uses its
