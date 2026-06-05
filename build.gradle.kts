@@ -66,11 +66,21 @@ kotlin {
             // (jvm + js + wasmJs). A properly provisioned Mac (and macOS CI) builds the Apple
             // targets normally. Linux/Windows CI never enters this branch.
             if (isFullXcodeAvailable()) {
+                // macOS is the most capable Kotlin/Native host: it can cross-build every
+                // target. We register the FULL set here so the release (which runs on
+                // macos-latest — see .github/workflows/release.yml) publishes the complete,
+                // consistent multiplatform metadata from a single host. Apple/iOS targets
+                // only ever build here; linuxX64/mingwX64 cross-compile fine from macOS.
                 macosArm64()
                 macosX64()
+                iosArm64()
+                iosX64()
+                iosSimulatorArm64()
+                linuxX64()
+                mingwX64()
             } else {
                 logger.warn(
-                    "Kexpresso: skipping macosArm64/macosX64 targets — no full Xcode install " +
+                    "Kexpresso: skipping Apple/Native targets — no full Xcode install " +
                         "detected (`xcrun xcodebuild -version` failed). Install Xcode to build " +
                         "the Apple/Native targets locally; jvm/js/wasmJs are unaffected.",
                 )

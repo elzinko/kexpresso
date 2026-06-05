@@ -9,7 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-_Nothing yet._
+### Added
+
+- **Apple & iOS Native targets, published.** Added `iosArm64`, `iosX64`, and
+  `iosSimulatorArm64` alongside the existing `macosX64` / `macosArm64`. The **release now runs
+  on a `macos-latest` runner** — the most capable Kotlin/Native host — so it builds and
+  publishes *every* target (JVM, JS, Wasm, Linux, Windows, macOS, iOS) from a single host,
+  yielding complete and consistent multiplatform metadata (a consumer resolving the root module
+  now sees the Apple/iOS variants). This unblocks Kotlin Multiplatform apps that target Apple
+  platforms from depending on kexpresso in shared `commonMain`.
+- **`Apple & Native` CI workflow** — verifies the Apple/iOS targets (tests on the macOS host +
+  iOS simulator) and that all targets build on macOS, on every pull request.
 
 ---
 
