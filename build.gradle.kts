@@ -12,7 +12,10 @@ plugins {
 
 // Maven Central uses the GitHub-namespace `io.github.<user>` (the legacy `com.github.*`
 // coordinate is not accepted on Central). The Vanniktech plugin reads this `group` below.
-group = "io.github.elzinko"
+// Overridable via `-PpublishGroup=` so JitPack can keep installing under its expected
+// `com.github.elzinko` coordinate (see jitpack.yml) — JitPack derives its groupId from the
+// git host, not from this build, and would otherwise not find the published artifact.
+group = (findProperty("publishGroup") as String?) ?: "io.github.elzinko"
 
 // Version is overridable from the release pipeline via `-PreleaseVersion=<tag>`,
 // and defaults to the in-development version otherwise.
