@@ -107,23 +107,23 @@ Kexpresso is a **Kotlin Multiplatform** library. The full DSL is written in
 
 | Target                                          | Status      |
 | ----------------------------------------------- | ----------- |
-| JVM                                             | ✅ supported |
-| JS (IR, Node.js)                                | ✅ supported |
-| Wasm (`wasmJs`, Node.js)                        | ✅ supported |
+| JVM                                             | ✅ published |
+| JS (IR, Node.js)                                | ✅ published |
+| Wasm (`wasmJs`, Node.js)                        | ✅ published |
 | Native — `linuxX64`, `mingwX64`                 | ✅ published |
-| Native — `macosX64`, `macosArm64`               | ✅ builds from source¹ |
+| Native — `macosX64`, `macosArm64`               | ✅ published |
+| Native — `iosArm64`, `iosX64`, `iosSimulatorArm64` | ✅ published |
 
-> **Built per host.** Kotlin/Native targets can only be cross-compiled from a host of the
-> same family, so the build registers them conditionally on the current OS: macOS hosts build
-> the `macos*` targets, while the Linux CI runner builds `linuxX64` + `mingwX64`. (Building the
-> `macos*` targets locally requires a full Xcode install — a Command-Line-Tools-only macOS box
-> still builds jvm/js/wasmJs and skips the Apple targets with a warning.)
+> **Built per host; published from macOS.** Kotlin/Native targets only cross-compile from a
+> capable host, so the build registers them conditionally: the Linux CI gate builds
+> `linuxX64` + `mingwX64` (fast), while **macOS — the most capable host — builds *every*
+> target**. The **release therefore runs on a `macos-latest` runner** and publishes the
+> complete, consistent multiplatform metadata (JVM, JS, Wasm, Linux, Windows, macOS, iOS)
+> from that single host, so a consumer resolving the root module sees every variant. A
+> dedicated `Apple & Native` workflow exercises the Apple/iOS targets on every PR.
 >
-> ¹ **Publishing scope (honest note).** The release pipeline runs on Linux, so the **published**
-> artifacts (GitHub Packages / JitPack) are `jvm`, `js`, `wasmJs`, `linuxX64`, and `mingwX64`.
-> The `macos*` targets compile and pass tests, but **pre-built macOS Native artifacts are not
-> yet published** — that needs a macOS release runner (a tracked roadmap follow-up). Until then,
-> macOS Native consumers build kexpresso from source.
+> *(Building the Apple targets locally requires a full Xcode install — a Command-Line-Tools-only
+> macOS box still builds jvm/js/wasmJs and skips the Apple/Native targets with a warning.)*
 
 For a Gradle Multiplatform consumer, the dependency resolves automatically per target
 via Gradle module metadata:
@@ -152,6 +152,37 @@ A **plain-Maven (JVM-only)** consumer must use the target-suffixed coordinate in
 > target suffix. Gradle resolves `com.github.elzinko:kexpresso:<version>` to the right
 > target automatically through Gradle metadata, but tools that ignore Gradle metadata
 > (e.g. plain Maven) must reference `kexpresso-jvm` directly.
+
+#### Where the artifacts are hosted (important for Apple/iOS)
+
+Not every target is available from every repository — choose your source accordingly:
+
+| Repository | Targets served | Auth |
+| --- | --- | --- |
+| **JitPack** (the [Install](#install) section) | `jvm`, `js`, `wasmJs`, `linuxX64`, `mingwX64` | none |
+| **GitHub Packages** | **all targets, incl. `macosX64`/`macosArm64`/`iosArm64`/`iosX64`/`iosSimulatorArm64`** | a GitHub token |
+
+JitPack builds on demand on **Linux**, so it can never produce the Apple/iOS artifacts. Those
+are built and published to **GitHub Packages** by the macOS release runner. **To consume the
+Apple/iOS variants today, use GitHub Packages** (a personal-access token with `read:packages`
+is required even for public packages — a GitHub limitation):
+
+```kotlin
+// settings.gradle.kts
+dependencyResolutionManagement {
+    repositories {
+        maven("https://maven.pkg.github.com/elzinko/kexpresso") {
+            credentials {
+                username = providers.gradleProperty("gpr.user").orNull ?: System.getenv("GITHUB_ACTOR")
+                password = providers.gradleProperty("gpr.key").orNull ?: System.getenv("GITHUB_TOKEN")
+            }
+        }
+    }
+}
+```
+
+> A future **Maven Central** publication (all targets, no auth) is on the roadmap — it needs
+> artifact signing, which isn't wired up yet.
 
 #### Honest platform caveats (JS / Wasm / Native)
 

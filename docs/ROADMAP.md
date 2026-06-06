@@ -57,9 +57,10 @@ API docs.
 - ✅ Tooling: jacoco → Kover, JMH removed (numbers stay in docs), multi-target publishing.
 
 ### 🔭 Next (toward 1.0.0) — Make it a category
-- **Publish macOS/iOS Native artifacts** — the release runs on Linux, so today only
-  jvm/js/wasmJs/linuxX64/mingwX64 are published; macOS Native builds from source only. Add a
-  **macOS release-runner matrix** so the Apple Native publications ship too.
+- ✅ **Publish macOS/iOS Native artifacts** — the release now runs on a `macos-latest` runner
+  (the most capable Kotlin/Native host), publishing every target — JVM, JS, Wasm, Linux,
+  Windows, macOS, **iOS** (`iosArm64`/`iosX64`/`iosSimulatorArm64`) — from a single host with
+  complete metadata. An `Apple & Native` PR workflow verifies the Apple targets.
 - **`kexpresso-test`** — `pattern.examples(n)` generates strings that match, for tests.
 - **Kotlin 2.x / Gradle 9 / Dokka 2** upgrades (the Dependabot majors deferred during KMP).
 - **Modularization** — `kexpresso-core` / `-analysis` / `-test` (likely premature until the lib grows).

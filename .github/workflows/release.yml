@@ -19,7 +19,12 @@ permissions:
 jobs:
   release:
     name: Build, publish & release
-    runs-on: ubuntu-latest
+    # macOS is the most capable Kotlin/Native host — it can build EVERY target
+    # (Apple, iOS, Linux, Windows, JVM, JS, Wasm). Publishing from a single all-targets
+    # host produces complete, consistent multiplatform metadata, so consumers resolving
+    # the root module see every variant (incl. macOS/iOS). Slower than Linux, but releases
+    # are infrequent and macOS runners are free for public repos.
+    runs-on: macos-latest
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
 
@@ -41,22 +46,29 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@d9c87d481d55275bb5441eef3fe0e46805f9ef70 # v3.5.0
 
-      - name: Build & verify
-        run: ./gradlew -PreleaseVersion=${{ steps.version.outputs.value }} build
+      # Sanity-check on the release host (safe on macOS — pure JVM). The full
+      # cross-platform test matrix already ran in CI (ci.yml on Linux + apple.yml on macOS);
+      # we must NOT run `build`/`allTests` here because linuxX64Test/mingwX64Test cannot
+      # EXECUTE on a macOS host (you can build those binaries, but not run them).
+      - name: Sanity test (JVM)
+        run: ./gradlew -PreleaseVersion=${{ steps.version.outputs.value }} jvmTest
 
       - name: Publish to GitHub Packages
+        # `publish` builds every target's artifacts (incl. Apple/iOS klibs) and the complete
+        # root metadata, then uploads them — without running the cross-platform test tasks.
         run: ./gradlew -PreleaseVersion=${{ steps.version.outputs.value }} publish
         env:
           GITHUB_ACTOR: ${{ github.actor }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # Under the Kotlin Multiplatform build, build/libs holds per-target artifacts:
-      # kexpresso-jvm-<v>.jar, the metadata/sources jars, and the JS kexpresso-js-<v>.klib.
-      # The *.jar / *.klib globs below resolve to all of them.
+      # build/libs holds the per-target artifacts staged for the GitHub Release page
+      # (jvm jar, js/wasm klibs, metadata + sources jars). The native klibs themselves
+      # are published to GitHub Packages by the step above. `shasum -a 256` is used
+      # instead of `sha256sum` (the latter is absent on macOS runners).
       - name: Generate checksums
         run: |
           cd build/libs
-          sha256sum *.jar *.klib > SHA256SUMS.txt
+          shasum -a 256 *.jar *.klib > SHA256SUMS.txt 2>/dev/null || shasum -a 256 *.jar > SHA256SUMS.txt
           cat SHA256SUMS.txt
 
       - name: Attest build provenance
