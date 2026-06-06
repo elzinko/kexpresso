@@ -1,8 +1,12 @@
 # JitPack build configuration.
 # Consumers depend on `com.github.elzinko:kexpresso:<tag-or-commit>`.
+# JitPack derives its groupId from the git host (`com.github.elzinko`), so we override the
+# Gradle `group` (default `io.github.elzinko`, for Maven Central) to match — otherwise JitPack
+# would install `io.github.elzinko:kexpresso` locally and never resolve the documented
+# `com.github.elzinko` coordinate.
 # Under Kotlin Multiplatform there is no single `test` task; tests run via `allTests`
 # (jvmTest + jsTest), so the install step excludes that instead.
 jdk:
   - openjdk17
 install:
-  - ./gradlew -PreleaseVersion=$VERSION publishToMavenLocal -x allTests
+  - ./gradlew -PpublishGroup=com.github.elzinko -PreleaseVersion=$VERSION publishToMavenLocal -x allTests

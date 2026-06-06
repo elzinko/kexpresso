@@ -54,12 +54,51 @@ jobs:
         run: ./gradlew -PreleaseVersion=${{ steps.version.outputs.value }} jvmTest
 
       - name: Publish to GitHub Packages
-        # `publish` builds every target's artifacts (incl. Apple/iOS klibs) and the complete
-        # root metadata, then uploads them — without running the cross-platform test tasks.
-        run: ./gradlew -PreleaseVersion=${{ steps.version.outputs.value }} publish
+        # `publishAllPublicationsToGitHubPackagesRepository` builds every target's artifacts
+        # (incl. Apple/iOS klibs) and the complete root metadata, then uploads them to GitHub
+        # Packages only — WITHOUT triggering the Maven Central / signing tasks (the plain
+        # `publish` task would now also target the Central repo). No cross-platform tests run.
+        run: >-
+          ./gradlew -PreleaseVersion=${{ steps.version.outputs.value }}
+          publishAllPublicationsToGitHubPackagesRepository
         env:
           GITHUB_ACTOR: ${{ github.actor }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # Preflight: only attempt the Central publish when ALL FOUR required secrets are present.
+      # Gating on the username alone would let a partial setup (e.g. username set but a signing
+      # secret missing) run the upload with empty Gradle properties and fail the release AFTER
+      # GitHub Packages was already published. `secrets` can't be read in a step-level `if:`, so
+      # we map them to env here and expose a single `ready` flag.
+      - name: Check Maven Central secrets
+        id: central_secrets
+        env:
+          U: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
+          P: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
+          K: ${{ secrets.SIGNING_IN_MEMORY_KEY }}
+          KP: ${{ secrets.SIGNING_IN_MEMORY_KEY_PASSWORD }}
+        run: |
+          if [ -n "$U" ] && [ -n "$P" ] && [ -n "$K" ] && [ -n "$KP" ]; then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Maven Central secrets incomplete — skipping Central publish. See docs/PUBLISHING.md."
+          fi
+
+      # Publish the signed artifacts to Maven Central (Sonatype Central Portal). Runs only when
+      # all four secrets exist (see preflight) so the release never half-fails before the
+      # maintainer has finished setup (docs/PUBLISHING.md). The secrets are mapped to the
+      # ORG_GRADLE_PROJECT_* names the Vanniktech plugin reads. Use `publishToMavenCentral` to
+      # upload to a staging repo (manual release on the Portal), or `publishAndReleaseToMavenCentral`
+      # to auto-release after a successful upload.
+      - name: Publish to Maven Central
+        if: ${{ steps.central_secrets.outputs.ready == 'true' }}
+        run: ./gradlew -PreleaseVersion=${{ steps.version.outputs.value }} publishToMavenCentral
+        env:
+          ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
+          ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
+          ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.SIGNING_IN_MEMORY_KEY }}
+          ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.SIGNING_IN_MEMORY_KEY_PASSWORD }}
 
       # build/libs holds the per-target artifacts staged for the GitHub Release page
       # (jvm jar, js/wasm klibs, metadata + sources jars). The native klibs themselves

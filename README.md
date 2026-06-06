@@ -3,9 +3,10 @@
 **A fluent Kotlin DSL that makes regular expressions readable.**
 
 [![CI](https://github.com/elzinko/kexpresso/actions/workflows/ci.yml/badge.svg)](https://github.com/elzinko/kexpresso/actions/workflows/ci.yml)
+[![Maven Central](https://img.shields.io/maven-central/v/io.github.elzinko/kexpresso.svg?label=Maven%20Central)](https://central.sonatype.com/artifact/io.github.elzinko/kexpresso)
 [![JitPack](https://jitpack.io/v/elzinko/kexpresso.svg)](https://jitpack.io/#elzinko/kexpresso)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Kotlin](https://img.shields.io/badge/Kotlin-1.8.20-7F52FF?logo=kotlin)](https://kotlinlang.org)
+[![Kotlin](https://img.shields.io/badge/Kotlin-1.9.24-7F52FF?logo=kotlin)](https://kotlinlang.org)
 [![API docs](https://img.shields.io/badge/API_docs-Dokka-blue)](https://elzinko.github.io/kexpresso/)
 [![CodeQL](https://github.com/elzinko/kexpresso/actions/workflows/codeql.yml/badge.svg)](https://github.com/elzinko/kexpresso/actions/workflows/codeql.yml)
 [![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/elzinko/kexpresso/badge)](https://scorecard.dev/viewer/?uri=github.com/elzinko/kexpresso)
@@ -63,41 +64,49 @@ Benefits at a glance:
 
 ## Install
 
-Kexpresso is distributed via [JitPack](https://jitpack.io/#elzinko/kexpresso).
-Any git tag or commit hash can be used as the version.
+Kexpresso is published to **Maven Central** — no repository configuration and **no token**
+required. Just add the dependency.
+
+> **groupId is now `io.github.elzinko`** (it was `com.github.elzinko` on JitPack/GitHub
+> Packages). Maven Central requires the `io.github.*` namespace.
 
 ### Gradle (Kotlin DSL)
 
 ```kotlin
-// settings.gradle.kts
-dependencyResolutionManagement {
-    repositories {
-        maven { url = uri("https://jitpack.io") }
-    }
-}
-
 // build.gradle.kts
 dependencies {
-    implementation("com.github.elzinko:kexpresso:0.1.0")
+    implementation("io.github.elzinko:kexpresso:<version>")
+}
+```
+
+`mavenCentral()` is in your repositories by default in most projects; add it if needed:
+
+```kotlin
+repositories {
+    mavenCentral()
 }
 ```
 
 ### Maven
 
 ```xml
-<repositories>
-    <repository>
-        <id>jitpack.io</id>
-        <url>https://jitpack.io</url>
-    </repository>
-</repositories>
-
 <dependency>
-    <groupId>com.github.elzinko</groupId>
+    <groupId>io.github.elzinko</groupId>
     <artifactId>kexpresso</artifactId>
-    <version>0.1.0</version>
+    <version><!-- version --></version>
 </dependency>
 ```
+
+### Alternative repositories
+
+Maven Central is the recommended source. Two alternatives remain available:
+
+- **JitPack** — builds on demand from a git tag/commit; coordinate `com.github.elzinko:kexpresso:<tag>`.
+  Serves `jvm`, `js`, `wasmJs`, `linuxX64`, `mingwX64` only (no Apple/iOS — JitPack builds on Linux).
+  Add `maven { url = uri("https://jitpack.io") }` to your repositories.
+- **GitHub Packages** — all targets incl. Apple/iOS; coordinate `io.github.elzinko:kexpresso:<version>`.
+  Requires a GitHub token (a GitHub limitation, even for public packages) — see
+  [Where the artifacts are hosted](#where-the-artifacts-are-hosted-important-for-appleios).
 
 ### Multiplatform
 
@@ -132,7 +141,7 @@ via Gradle module metadata:
 kotlin {
     sourceSets {
         commonMain.dependencies {
-            implementation("com.github.elzinko:kexpresso:<version>")
+            implementation("io.github.elzinko:kexpresso:<version>")
         }
     }
 }
@@ -142,14 +151,14 @@ A **plain-Maven (JVM-only)** consumer must use the target-suffixed coordinate in
 
 ```xml
 <dependency>
-    <groupId>com.github.elzinko</groupId>
+    <groupId>io.github.elzinko</groupId>
     <artifactId>kexpresso-jvm</artifactId>
     <version><!-- version --></version>
 </dependency>
 ```
 
 > **Breaking change (since the multiplatform release):** artifact coordinates now carry a
-> target suffix. Gradle resolves `com.github.elzinko:kexpresso:<version>` to the right
+> target suffix. Gradle resolves `io.github.elzinko:kexpresso:<version>` to the right
 > target automatically through Gradle metadata, but tools that ignore Gradle metadata
 > (e.g. plain Maven) must reference `kexpresso-jvm` directly.
 
@@ -159,13 +168,17 @@ Not every target is available from every repository — choose your source accor
 
 | Repository | Targets served | Auth |
 | --- | --- | --- |
-| **JitPack** (the [Install](#install) section) | `jvm`, `js`, `wasmJs`, `linuxX64`, `mingwX64` | none |
+| **Maven Central** (the [Install](#install) section) | **all targets, incl. `macosX64`/`macosArm64`/`iosArm64`/`iosX64`/`iosSimulatorArm64`** | **none** |
 | **GitHub Packages** | **all targets, incl. `macosX64`/`macosArm64`/`iosArm64`/`iosX64`/`iosSimulatorArm64`** | a GitHub token |
+| **JitPack** | `jvm`, `js`, `wasmJs`, `linuxX64`, `mingwX64` | none |
 
-JitPack builds on demand on **Linux**, so it can never produce the Apple/iOS artifacts. Those
-are built and published to **GitHub Packages** by the macOS release runner. **To consume the
-Apple/iOS variants today, use GitHub Packages** (a personal-access token with `read:packages`
-is required even for public packages — a GitHub limitation):
+**Maven Central is the recommended source for every target** (including Apple/iOS) with no
+authentication — the release runs on macOS and publishes the complete, signed multiplatform
+metadata. GitHub Packages serves the same full set but requires a token. JitPack builds on
+demand on **Linux**, so it can never produce the Apple/iOS artifacts.
+
+To consume from **GitHub Packages** instead (a personal-access token with `read:packages` is
+required even for public packages — a GitHub limitation):
 
 ```kotlin
 // settings.gradle.kts
@@ -180,9 +193,6 @@ dependencyResolutionManagement {
     }
 }
 ```
-
-> A future **Maven Central** publication (all targets, no auth) is on the roadmap — it needs
-> artifact signing, which isn't wired up yet.
 
 #### Honest platform caveats (JS / Wasm / Native)
 
