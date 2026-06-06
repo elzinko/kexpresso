@@ -11,6 +11,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Four new domain helpers in `Domains.kt`:**
+  - `ipv6()` — IPv6 address, full and `::` -compressed forms (e.g. `2001:db8::1`, `::1`).
+    Embedded IPv4 notation and zone IDs are not covered; documented caveats included.
+  - `macAddress()` — IEEE 802 MAC address, colon- or hyphen-separated
+    (e.g. `01:23:45:67:89:AB`, `01-23-45-67-89-ab`). Cisco dot notation not supported.
+  - `base64()` — standard Base64 with optional `=`/`==` padding
+    (e.g. `S2V4cHJlc3Nv`, `dGVzdA==`). Also matches the empty string; URL-safe Base64 not matched.
+  - `jwt()` — JSON Web Token in compact serialisation: three base64url segments separated by dots.
+    Structural validation only — signature and claims are not verified.
+
 - **`KexpressoPattern.examples(count, seed)`** — AST-driven string generation. Walks the
   pattern's internal AST and produces up to `count` distinct strings that satisfy `matches()`.
   Deterministic for a given `seed` (uses `kotlin.random.Random`; works on all KMP targets).

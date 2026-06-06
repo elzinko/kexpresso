@@ -423,4 +423,171 @@ class DomainsTest {
         assertFalse(p.matches("+1 415 555 2671"))
         assertFalse(p.matches("14155552671"))
     }
+
+    // ── ipv6 ──────────────────────────────────────────────────────────────────
+
+    @Test
+    fun `ipv6 matches full 8-group address`() {
+        val p = kexpresso { startOfText(); ipv6(); endOfText() }
+        assertTrue(p.matches("2001:0db8:85a3:0000:0000:8a2e:0370:7334"))
+        assertTrue(p.matches("0000:0000:0000:0000:0000:0000:0000:0001"))
+        assertTrue(p.matches("FEDC:BA98:7654:3210:FEDC:BA98:7654:3210"))
+    }
+
+    @Test
+    fun `ipv6 matches compressed forms`() {
+        val p = kexpresso { startOfText(); ipv6(); endOfText() }
+        // loopback
+        assertTrue(p.matches("::1"))
+        // all-zeros
+        assertTrue(p.matches("::"))
+        // trailing compression
+        assertTrue(p.matches("2001:db8::"))
+        // leading compression
+        assertTrue(p.matches("::8a2e:370:7334"))
+        // mid-range compression
+        assertTrue(p.matches("2001:db8::1"))
+        assertTrue(p.matches("fe80::1"))
+        assertTrue(p.matches("2001:db8:85a3::8a2e:370:7334"))
+    }
+
+    @Test
+    fun `ipv6 does not match plain IPv4`() {
+        val p = kexpresso { startOfText(); ipv6(); endOfText() }
+        assertFalse(p.matches("192.168.1.1"))
+        assertFalse(p.matches("255.255.255.255"))
+    }
+
+    @Test
+    fun `ipv6 does not match malformed addresses`() {
+        val p = kexpresso { startOfText(); ipv6(); endOfText() }
+        // too many groups (9)
+        assertFalse(p.matches("1:2:3:4:5:6:7:8:9"))
+        // non-hex characters
+        assertFalse(p.matches("gggg:0000:0000:0000:0000:0000:0000:0001"))
+        // empty
+        assertFalse(p.matches(""))
+    }
+
+    // ── macAddress ────────────────────────────────────────────────────────────
+
+    @Test
+    fun `macAddress matches colon-separated addresses`() {
+        val p = kexpresso { startOfText(); macAddress(); endOfText() }
+        assertTrue(p.matches("01:23:45:67:89:AB"))
+        assertTrue(p.matches("01:23:45:67:89:ab"))
+        assertTrue(p.matches("ff:ff:ff:ff:ff:ff"))
+        assertTrue(p.matches("00:00:00:00:00:00"))
+    }
+
+    @Test
+    fun `macAddress matches hyphen-separated addresses`() {
+        val p = kexpresso { startOfText(); macAddress(); endOfText() }
+        assertTrue(p.matches("01-23-45-67-89-AB"))
+        assertTrue(p.matches("01-23-45-67-89-ab"))
+        assertTrue(p.matches("FF-FF-FF-FF-FF-FF"))
+    }
+
+    @Test
+    fun `macAddress does not match incomplete addresses`() {
+        val p = kexpresso { startOfText(); macAddress(); endOfText() }
+        assertFalse(p.matches("01:23:45"))
+        assertFalse(p.matches("01:23:45:67:89"))
+        assertFalse(p.matches("01:23:45:67:89:AB:CD"))
+    }
+
+    @Test
+    fun `macAddress does not match wrong formats`() {
+        val p = kexpresso { startOfText(); macAddress(); endOfText() }
+        // Cisco dot notation
+        assertFalse(p.matches("0123.4567.89ab"))
+        // mixed separators
+        assertFalse(p.matches("01:23-45:67-89:AB"))
+        // no separators
+        assertFalse(p.matches("0123456789AB"))
+    }
+
+    // ── base64 ────────────────────────────────────────────────────────────────
+
+    @Test
+    fun `base64 matches unpadded strings`() {
+        val p = kexpresso { startOfText(); base64(); endOfText() }
+        // "Kexpresso" in Base64
+        assertTrue(p.matches("S2V4cHJlc3Nv"))
+        // 4-char block
+        assertTrue(p.matches("dGVz"))
+    }
+
+    @Test
+    fun `base64 matches padded strings`() {
+        val p = kexpresso { startOfText(); base64(); endOfText() }
+        // single-pad ("test")
+        assertTrue(p.matches("dGVzdA=="))
+        // double... wait — "YQ==" is "a"
+        assertTrue(p.matches("YQ=="))
+        // triple block with single pad ("Man" → "TWFu" no pad; "Ma" → "TWE=")
+        assertTrue(p.matches("TWE="))
+    }
+
+    @Test
+    fun `base64 does not match strings with illegal characters`() {
+        val p = kexpresso { startOfText(); base64(); endOfText() }
+        assertFalse(p.matches("S2V4!HJlc3Nv"))
+        assertFalse(p.matches("hello world"))
+        // URL-safe chars that are NOT standard base64
+        assertFalse(p.matches("S2V4-HJlc3Nv"))
+        assertFalse(p.matches("S2V4_HJlc3Nv"))
+    }
+
+    @Test
+    fun `base64 caveat - empty string matches`() {
+        // Documented: the pattern matches the empty string (zero groups, zero padding).
+        val p = kexpresso { startOfText(); base64(); endOfText() }
+        assertTrue(p.matches(""))
+    }
+
+    // ── jwt ───────────────────────────────────────────────────────────────────
+
+    @Test
+    fun `jwt matches three-part base64url tokens`() {
+        val p = kexpresso { startOfText(); jwt(); endOfText() }
+        assertTrue(
+            p.matches(
+                "eyJhbGciOiJIUzI1NiJ9" +
+                    ".eyJzdWIiOiJ1c2VyIn0" +
+                    ".SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
+            )
+        )
+        // minimal single-char segments
+        assertTrue(p.matches("a.b.c"))
+        // base64url chars: underscore and hyphen
+        assertTrue(p.matches("abc-def.ghi_jkl.mno123"))
+    }
+
+    @Test
+    fun `jwt does not match two-part tokens`() {
+        val p = kexpresso { startOfText(); jwt(); endOfText() }
+        assertFalse(p.matches("eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1c2VyIn0"))
+    }
+
+    @Test
+    fun `jwt does not match four-part tokens`() {
+        val p = kexpresso { startOfText(); jwt(); endOfText() }
+        assertFalse(p.matches("a.b.c.d"))
+    }
+
+    @Test
+    fun `jwt does not match tokens with standard base64 chars`() {
+        val p = kexpresso { startOfText(); jwt(); endOfText() }
+        // '+' and '/' are standard base64 but NOT base64url
+        assertFalse(p.matches("a+b.c/d.efg"))
+    }
+
+    @Test
+    fun `jwt does not match empty segments`() {
+        val p = kexpresso { startOfText(); jwt(); endOfText() }
+        assertFalse(p.matches(".b.c"))
+        assertFalse(p.matches("a..c"))
+        assertFalse(p.matches("a.b."))
+    }
 }
