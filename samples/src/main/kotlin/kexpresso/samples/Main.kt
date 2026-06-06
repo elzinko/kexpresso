@@ -4,6 +4,7 @@ import kexpresso.Kexpresso
 import kexpresso.analyze
 import kexpresso.captures
 import kexpresso.email
+import kexpresso.examples
 import kexpresso.from
 import kexpresso.ipv4
 import kexpresso.isoDate
@@ -80,7 +81,14 @@ fun main() {
     println("DSL code   :")
     println(parsed.toKexpressoCode())
 
-    // ── 7. ReDoS analysis ────────────────────────────────────────────────────
+    // ── 7. Generate matching examples ───────────────────────────────────────
+    println("=== 7. Generate matching examples ===")
+    val pinPattern = kexpresso { exactly(4) { digit() } }
+    println("Pattern  : $pinPattern")
+    println("examples : ${pinPattern.examples(3)}")
+    println()
+
+    // ── 8. ReDoS analysis ────────────────────────────────────────────────────
     println("=== 7. ReDoS analysis ===")
     val safePattern  = kexpresso { isoDate() }
     val riskyPattern = kexpresso { oneOrMore { oneOrMore { letter() } } }
