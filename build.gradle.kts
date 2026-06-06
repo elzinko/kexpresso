@@ -13,7 +13,7 @@ group = "com.github.elzinko"
 
 // Version is overridable from the release pipeline via `-PreleaseVersion=<tag>`,
 // and defaults to the in-development version otherwise.
-version = (findProperty("releaseVersion") as String?) ?: "0.5.0"
+version = (findProperty("releaseVersion") as String?) ?: "0.6.0"
 
 repositories {
     mavenCentral()
