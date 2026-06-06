@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+_Nothing yet._
+
+---
+
+## [0.6.0] - 2026-06-06
+
 ### Added
 
 - **Apple & iOS Native targets, published.** Added `iosArm64`, `iosX64`, and
@@ -247,7 +253,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Detekt** — static analysis configuration at `config/detekt/detekt.yml`.
 - **JaCoCo** — test coverage reporting.
 
-[Unreleased]: https://github.com/elzinko/kexpresso/compare/v0.5.0...HEAD
+[Unreleased]: https://github.com/elzinko/kexpresso/compare/v0.6.0...HEAD
+[0.6.0]: https://github.com/elzinko/kexpresso/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/elzinko/kexpresso/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/elzinko/kexpresso/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/elzinko/kexpresso/compare/v0.2.0...v0.3.0
