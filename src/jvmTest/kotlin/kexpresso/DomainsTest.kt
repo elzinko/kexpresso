@@ -469,6 +469,16 @@ class DomainsTest {
         assertFalse(p.matches(""))
     }
 
+    @Test
+    fun `ipv6 composes with surrounding tokens (grouped alternation)`() {
+        val p = kexpresso { startOfText(); literal("ip="); ipv6(); literal(";"); endOfText() }
+        assertTrue(p.matches("ip=2001:db8::1;"))
+        assertTrue(p.matches("ip=::1;"))
+        // A bare branch without the prefix/suffix must NOT match — proves the `|` is grouped.
+        assertFalse(p.matches("2001:db8::1;"))
+        assertFalse(p.matches("ip=::1"))
+    }
+
     // ── macAddress ────────────────────────────────────────────────────────────
 
     @Test
@@ -507,6 +517,16 @@ class DomainsTest {
         assertFalse(p.matches("0123456789AB"))
     }
 
+    @Test
+    fun `macAddress composes with surrounding tokens (grouped alternation)`() {
+        val p = kexpresso { startOfText(); literal("MAC="); macAddress(); literal(";"); endOfText() }
+        assertTrue(p.matches("MAC=01:23:45:67:89:AB;"))
+        assertTrue(p.matches("MAC=01-23-45-67-89-ab;"))
+        // The hyphen branch must not match without the MAC= prefix — proves the `|` is grouped.
+        assertFalse(p.matches("01-23-45-67-89-AB;"))
+        assertFalse(p.matches("MAC=01:23:45:67:89:AB"))
+    }
+
     // ── base64 ────────────────────────────────────────────────────────────────
 
     @Test
@@ -516,6 +536,9 @@ class DomainsTest {
         assertTrue(p.matches("S2V4cHJlc3Nv"))
         // 4-char block
         assertTrue(p.matches("dGVz"))
+        // truly unpadded, length not a multiple of 4 (regression: rejected before the fix)
+        assertTrue(p.matches("YQ")) // "a"
+        assertTrue(p.matches("TWE")) // "Ma"
     }
 
     @Test

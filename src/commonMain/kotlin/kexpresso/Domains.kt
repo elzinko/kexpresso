@@ -220,8 +220,11 @@ fun KexpressoBuilder.e164Phone(): KexpressoBuilder =
  * - For a plain IPv4 address, use [ipv4] instead.
  */
 fun KexpressoBuilder.ipv6(): KexpressoBuilder =
+    // The branches are wrapped in a non-capturing group so the helper composes correctly with
+    // surrounding tokens (otherwise the bare `|` would bind only the first/last branch).
     append(
-        "(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}" +
+        "(?:" +
+            "(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}" +
             "|(?:[0-9a-fA-F]{1,4}:){1,7}:" +
             "|:(?::[0-9a-fA-F]{1,4}){1,7}" +
             "|(?:[0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}" +
@@ -230,7 +233,8 @@ fun KexpressoBuilder.ipv6(): KexpressoBuilder =
             "|(?:[0-9a-fA-F]{1,4}:){1,3}(?::[0-9a-fA-F]{1,4}){1,4}" +
             "|(?:[0-9a-fA-F]{1,4}:){1,2}(?::[0-9a-fA-F]{1,4}){1,5}" +
             "|[0-9a-fA-F]{1,4}:(?::[0-9a-fA-F]{1,4}){1,6}" +
-            "|::"
+            "|::" +
+            ")"
     )
 
 /**
@@ -248,9 +252,13 @@ fun KexpressoBuilder.ipv6(): KexpressoBuilder =
  * - Mixed separators (e.g. `01:23-45:67-89:AB`) do **not** match.
  */
 fun KexpressoBuilder.macAddress(): KexpressoBuilder =
+    // Wrapped in a non-capturing group so the two separator branches compose correctly with
+    // surrounding tokens (a bare `|` would let adjacent tokens bind to only one branch).
     append(
-        "(?:[0-9a-fA-F]{2}:){5}[0-9a-fA-F]{2}" +
-            "|(?:[0-9a-fA-F]{2}-){5}[0-9a-fA-F]{2}"
+        "(?:" +
+            "(?:[0-9a-fA-F]{2}:){5}[0-9a-fA-F]{2}" +
+            "|(?:[0-9a-fA-F]{2}-){5}[0-9a-fA-F]{2}" +
+            ")"
     )
 
 /**
@@ -259,7 +267,7 @@ fun KexpressoBuilder.macAddress(): KexpressoBuilder =
  * Accepts strings made up of groups of four Base64 characters (`A–Z`, `a–z`, `0–9`,
  * `+`, `/`), with optional `=` or `==` padding at the end.
  *
- * Example match: `"S2V4cHJlc3Nv"`, `"dGVzdA=="`, `"YQ=="`
+ * Example match: `"S2V4cHJlc3Nv"`, `"dGVzdA=="`, `"YQ=="`, `"YQ"` (unpadded), `"TWE"`
  *
  * **Caveats:**
  * - Also matches the **empty string** (zero groups, zero padding — valid per the pattern).
@@ -269,9 +277,11 @@ fun KexpressoBuilder.macAddress(): KexpressoBuilder =
  *   for that, use [jwt] which uses the base64url alphabet.
  */
 fun KexpressoBuilder.base64(): KexpressoBuilder =
+    // Trailing group accepts a final 2- or 3-char chunk with OR without padding, so both padded
+    // (`YQ==`, `TWE=`) and unpadded (`YQ`, `TWE`) Base64 are matched, as the docs advertise.
     append(
         "(?:[A-Za-z0-9+/]{4})*" +
-            "(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?"
+            "(?:[A-Za-z0-9+/]{2}(?:==)?|[A-Za-z0-9+/]{3}=?)?"
     )
 
 /**
