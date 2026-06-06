@@ -62,6 +62,23 @@ Benefits at a glance:
 
 ---
 
+## Try it in 30 seconds
+
+Clone and run the guided-tour sample — no extra setup, no credentials:
+
+```bash
+git clone https://github.com/elzinko/kexpresso && cd kexpresso && ./gradlew :samples:run
+```
+
+The console output walks you through every headline feature: building patterns, domain helpers,
+typed captures, `describe()`, reverse-engineering a raw regex with `Kexpresso.from()`, and ReDoS
+analysis.
+
+Once `io.github.elzinko:kexpresso` lands in your own project (see **Install** below), the same
+capabilities are one dependency away.
+
+---
+
 ## Install
 
 Kexpresso is published to **Maven Central** — no repository configuration and **no token**
