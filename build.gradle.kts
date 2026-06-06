@@ -1,3 +1,4 @@
+import com.vanniktech.maven.publish.SonatypeHost
 import org.gradle.internal.os.OperatingSystem
 import org.jetbrains.kotlin.gradle.targets.js.dsl.ExperimentalWasmDsl
 
@@ -6,10 +7,12 @@ plugins {
     id("io.gitlab.arturbosch.detekt") version "1.23.6"
     id("org.jetbrains.dokka") version "1.9.20"
     id("org.jetbrains.kotlinx.kover") version "0.7.6"
-    `maven-publish`
+    id("com.vanniktech.maven.publish") version "0.30.0"
 }
 
-group = "com.github.elzinko"
+// Maven Central uses the GitHub-namespace `io.github.<user>` (the legacy `com.github.*`
+// coordinate is not accepted on Central). The Vanniktech plugin reads this `group` below.
+group = "io.github.elzinko"
 
 // Version is overridable from the release pipeline via `-PreleaseVersion=<tag>`,
 // and defaults to the in-development version otherwise.
@@ -34,9 +37,7 @@ fun isFullXcodeAvailable(): Boolean = runCatching {
 kotlin {
     jvmToolchain(17)
 
-    jvm {
-        withSourcesJar(publish = true)
-    }
+    jvm {}
 
     js(IR) {
         nodejs()
@@ -165,45 +166,57 @@ tasks.named("check") {
     dependsOn(tasks.named("koverVerify"))
 }
 
-// A javadoc/html jar built from Dokka so published artifacts carry browsable API docs.
-val dokkaHtmlJar by tasks.registering(Jar::class) {
-    group = "documentation"
-    description = "Assembles a javadoc jar from the Dokka HTML output."
-    dependsOn(tasks.named("dokkaHtml"))
-    from(tasks.named("dokkaHtml"))
-    archiveClassifier.set("javadoc")
-}
+// ── Publishing ────────────────────────────────────────────────────────────────
+// The Vanniktech Maven Publish plugin configures all KMP publications for the Sonatype
+// Central Portal: it adds the sources + Dokka javadoc jars, applies the POM, wires GPG
+// signing, and registers the Central Portal upload tasks (publishToMavenCentral /
+// publishAndReleaseToMavenCentral). Signing + Central credentials are read from Gradle
+// properties / env (ORG_GRADLE_PROJECT_signingInMemoryKey, …mavenCentralUsername, …).
+//
+// Signing is credential-OPTIONAL for local builds: `signAllPublications()` makes Gradle's
+// signing tasks run for every publication (including `publishToMavenLocal`), and they FAIL
+// with "no configured signatory" when no GPG key is present. So we enable signing only when
+// a signing key is actually provided. With NO credentials set, `./gradlew build` and
+// `./gradlew publishToMavenLocal` succeed (unsigned). In CI the SIGNING_IN_MEMORY_KEY secret
+// is mapped to ORG_GRADLE_PROJECT_signingInMemoryKey, so Central publications are signed.
+val hasSigningKey = (project.findProperty("signingInMemoryKey") as String?)
+    ?: System.getenv("ORG_GRADLE_PROJECT_signingInMemoryKey")
+mavenPublishing {
+    publishToMavenCentral(SonatypeHost.CENTRAL_PORTAL)
+    if (!hasSigningKey.isNullOrBlank()) {
+        signAllPublications()
+    }
+    coordinates(group.toString(), "kexpresso", version.toString())
 
-publishing {
-    publications {
-        // KMP auto-creates a publication per target (kexpresso, kexpresso-jvm, kexpresso-js)
-        // plus the root metadata publication. Apply the shared POM + the Dokka javadoc jar to all.
-        withType<MavenPublication>().configureEach {
-            artifact(dokkaHtmlJar)
-            pom {
-                name.set("Kexpresso")
-                description.set("A fluent Kotlin DSL that makes regular expressions readable.")
-                url.set("https://github.com/elzinko/kexpresso")
-                licenses {
-                    license {
-                        name.set("MIT License")
-                        url.set("https://opensource.org/licenses/MIT")
-                    }
-                }
-                developers {
-                    developer {
-                        id.set("elzinko")
-                        name.set("Thomas Couderc")
-                    }
-                }
-                scm {
-                    url.set("https://github.com/elzinko/kexpresso")
-                    connection.set("scm:git:git://github.com/elzinko/kexpresso.git")
-                    developerConnection.set("scm:git:ssh://git@github.com/elzinko/kexpresso.git")
-                }
+    pom {
+        name.set("Kexpresso")
+        description.set("A fluent Kotlin DSL that makes regular expressions readable.")
+        url.set("https://github.com/elzinko/kexpresso")
+        licenses {
+            license {
+                name.set("MIT License")
+                url.set("https://opensource.org/licenses/MIT")
             }
         }
+        developers {
+            developer {
+                id.set("elzinko")
+                name.set("Thomas Couderc")
+            }
+        }
+        scm {
+            url.set("https://github.com/elzinko/kexpresso")
+            connection.set("scm:git:git://github.com/elzinko/kexpresso.git")
+            developerConnection.set("scm:git:ssh://git@github.com/elzinko/kexpresso.git")
+        }
     }
+}
+
+// Keep the existing GitHub Packages target alongside Maven Central. Vanniktech configures
+// the publications (and Central repo); we re-add the GitHubPackages repository so the
+// `publish` / `publishAllPublicationsToGitHubPackagesRepository` tasks still work.
+// Credentials come from the GITHUB_ACTOR / GITHUB_TOKEN env vars in the release workflow.
+publishing {
     repositories {
         maven {
             name = "GitHubPackages"

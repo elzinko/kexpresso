@@ -9,7 +9,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-_Nothing yet._
+### Added
+
+- **Maven Central publishing.** Kexpresso now publishes to **Maven Central** (Sonatype Central
+  Portal) via the [Vanniktech Maven Publish plugin](https://github.com/vanniktech/gradle-maven-publish-plugin),
+  which configures every Kotlin Multiplatform publication (sources + Dokka javadoc jars, POM,
+  GPG signing) and the Central Portal upload tasks. This is the frictionless, **no-token**
+  install path for consumers. See [`docs/PUBLISHING.md`](docs/PUBLISHING.md) for the
+  maintainer setup (Central account, `io.github.elzinko` namespace verification, GPG key,
+  and the four `MAVEN_CENTRAL_*` / `SIGNING_IN_MEMORY_KEY*` repo secrets).
+- **GPG signing** of all published artifacts (required by Maven Central). Signing is
+  credential-optional locally: `./gradlew build` and `publishToMavenLocal` succeed unsigned
+  when no signing key is configured.
+
+### Changed
+
+- **BREAKING — groupId is now `io.github.elzinko`** (was `com.github.elzinko`). Maven Central
+  requires the `io.github.<user>` namespace for GitHub-verified accounts; `com.github.*` is
+  not accepted. Update your dependency coordinate from
+  `com.github.elzinko:kexpresso:<version>` to `io.github.elzinko:kexpresso:<version>`.
+  GitHub Packages publishing continues to work alongside Maven Central.
 
 ---
 

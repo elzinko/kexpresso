@@ -54,12 +54,32 @@ jobs:
         run: ./gradlew -PreleaseVersion=${{ steps.version.outputs.value }} jvmTest
 
       - name: Publish to GitHub Packages
-        # `publish` builds every target's artifacts (incl. Apple/iOS klibs) and the complete
-        # root metadata, then uploads them — without running the cross-platform test tasks.
-        run: ./gradlew -PreleaseVersion=${{ steps.version.outputs.value }} publish
+        # `publishAllPublicationsToGitHubPackagesRepository` builds every target's artifacts
+        # (incl. Apple/iOS klibs) and the complete root metadata, then uploads them to GitHub
+        # Packages only — WITHOUT triggering the Maven Central / signing tasks (the plain
+        # `publish` task would now also target the Central repo). No cross-platform tests run.
+        run: >-
+          ./gradlew -PreleaseVersion=${{ steps.version.outputs.value }}
+          publishAllPublicationsToGitHubPackagesRepository
         env:
           GITHUB_ACTOR: ${{ github.actor }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # Publish the signed artifacts to Maven Central (Sonatype Central Portal). This runs only
+      # once the four repo secrets exist (guarded below) so the release never fails before the
+      # maintainer has set up the Central account + GPG key (see docs/PUBLISHING.md). The four
+      # secrets are mapped to the ORG_GRADLE_PROJECT_* names the Vanniktech plugin reads.
+      # Use `publishToMavenCentral` to upload to a staging repo (manual release on the Portal),
+      # or swap to `publishAndReleaseToMavenCentral` to auto-release after a successful upload.
+      - name: Publish to Maven Central
+        if: ${{ env.MAVEN_CENTRAL_USERNAME != '' }}
+        run: ./gradlew -PreleaseVersion=${{ steps.version.outputs.value }} publishToMavenCentral
+        env:
+          MAVEN_CENTRAL_USERNAME: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
+          ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
+          ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
+          ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.SIGNING_IN_MEMORY_KEY }}
+          ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.SIGNING_IN_MEMORY_KEY_PASSWORD }}
 
       # build/libs holds the per-target artifacts staged for the GitHub Release page
       # (jvm jar, js/wasm klibs, metadata + sources jars). The native klibs themselves
