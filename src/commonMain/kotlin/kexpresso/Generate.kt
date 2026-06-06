@@ -151,29 +151,36 @@ private val TOKEN_GENERATORS: Map<String, (Random) -> String> = buildMap {
  */
 private fun generateToken(tokenRegex: String, rng: Random): String {
     TOKEN_GENERATORS[tokenRegex]?.let { return it(rng) }
-
-    // Best-effort: try to parse a simple character class [chars] or [a-z] style.
-    if (tokenRegex.startsWith('[') && tokenRegex.endsWith(']')) {
-        val members = parseCharClass(tokenRegex)
-        if (members.isNotEmpty()) return members[rng.nextInt(members.size)].toString()
-    }
-
-    // Fallback: a safe character that works as a placeholder.
-    return "x"
+    // Best-effort character class, else a safe placeholder.
+    return generateCharClassChar(tokenRegex, rng) ?: "x"
 }
 
 /**
- * Parses a simple (non-negated) character class pattern like `[abc]`, `[a-z]`, or `[a-zA-Z0-9]`
- * and returns the list of characters it represents.
+ * Generates a single character satisfying a `[...]` / `[^...]` character-class token, or `null`
+ * if [tokenRegex] is not a character class (or no member can be produced).
  *
- * Handles ranges (`a-z`) and individual characters. Negated classes (`[^...]`) return empty
- * (caller will fall back to `"x"`).
+ * Negated classes pick a safe character that is NOT excluded, so the generated example still
+ * satisfies the class (e.g. `noneOf("x")` must never yield `"x"`).
  */
-private fun parseCharClass(tokenRegex: String): List<Char> {
-    // Strip the outer [ ]
+private fun generateCharClassChar(tokenRegex: String, rng: Random): String? {
+    if (!tokenRegex.startsWith('[') || !tokenRegex.endsWith(']')) return null
     val inner = tokenRegex.substring(1, tokenRegex.length - 1)
-    if (inner.startsWith('^')) return emptyList() // negated class → caller falls back
+    return if (inner.startsWith('^')) {
+        val excluded = parseClassMembers(inner.substring(1)).toSet()
+        (ALPHANUMERICS + ' ' + NON_WORD_CHARS).firstOrNull { it !in excluded }?.toString()
+    } else {
+        val members = parseClassMembers(inner)
+        if (members.isEmpty()) null else members[rng.nextInt(members.size)].toString()
+    }
+}
 
+/**
+ * Parses the body of a character class — the part between `[` and `]`, with any leading `^`
+ * already removed — like `abc`, `a-z`, or `a-zA-Z0-9`, into the characters it represents.
+ *
+ * Handles ranges (`a-z`), escapes (`\d`, `\w`, `\s`), and individual characters.
+ */
+private fun parseClassMembers(inner: String): List<Char> {
     val result = mutableListOf<Char>()
     var i = 0
     while (i < inner.length) {

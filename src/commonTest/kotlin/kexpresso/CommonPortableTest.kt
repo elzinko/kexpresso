@@ -335,6 +335,19 @@ class CommonPortableTest {
         assertAllMatch(pattern { digit() })
 
     @Test
+    fun examplesNoneOfMatchesPattern() =
+        // Regression: a negated class [^x] must never generate the excluded char "x".
+        assertAllMatch(kexpresso { noneOf("x") })
+
+    @Test
+    fun examplesAnyOfMatchesPattern() =
+        assertAllMatch(kexpresso { oneOrMore { anyOf("abc") } })
+
+    @Test
+    fun examplesInRangeMatchesPattern() =
+        assertAllMatch(kexpresso { inRange('a', 'f') })
+
+    @Test
     fun examplesLetterMatchesPattern() =
         assertAllMatch(pattern { letter() })
 
