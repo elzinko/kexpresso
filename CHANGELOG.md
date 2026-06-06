@@ -11,6 +11,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **`KexpressoPattern.examples(count, seed)`** — AST-driven string generation. Walks the
+  pattern's internal AST and produces up to `count` distinct strings that satisfy `matches()`.
+  Deterministic for a given `seed` (uses `kotlin.random.Random`; works on all KMP targets).
+  Supported nodes (guaranteed to produce matching strings): `Sequence`, `Literal`, `Token`
+  primitives (digit, letter, whitespace, anchors, …), `Quantifier`, `Group`, and `Alternation`.
+  Best-effort (no match guarantee): `Raw` nodes (i.e. domain helpers like `email()` / `ipv4()`
+  and `Kexpresso.from()`), lookarounds, and backreferences — generation still completes without
+  throwing.
+
 - **Maven Central publishing.** Kexpresso now publishes to **Maven Central** (Sonatype Central
   Portal) via the [Vanniktech Maven Publish plugin](https://github.com/vanniktech/gradle-maven-publish-plugin),
   which configures every Kotlin Multiplatform publication (sources + Dokka javadoc jars, POM,

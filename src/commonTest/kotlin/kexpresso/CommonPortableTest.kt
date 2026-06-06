@@ -318,4 +318,119 @@ class CommonPortableTest {
         assertFailsWith<IllegalArgumentException> { pattern { capture("bad name") { digit() } } }
         assertFailsWith<IllegalArgumentException> { pattern { backreference(0) } }
     }
+
+    // ── examples(): AST-driven string generation ──────────────────────────────
+
+    /** Every example returned for a supported-only pattern must satisfy matches(). */
+    private fun assertAllMatch(p: KexpressoPattern, count: Int = 5) {
+        val examples = p.examples(count)
+        assertTrue(examples.isNotEmpty(), "examples() must return at least one result")
+        for (ex in examples) {
+            assertTrue(p.matches(ex), "Expected \"$ex\" to match ${p.source} but it did not")
+        }
+    }
+
+    @Test
+    fun examplesDigitMatchesPattern() =
+        assertAllMatch(pattern { digit() })
+
+    @Test
+    fun examplesLetterMatchesPattern() =
+        assertAllMatch(pattern { letter() })
+
+    @Test
+    fun examplesCapitalLetterFollowedByLettersMatchesPattern() =
+        assertAllMatch(kexpresso { capitalLetter(); oneOrMore { letter() } })
+
+    @Test
+    fun examplesExactlyFourDigitsMatchesPattern() =
+        assertAllMatch(kexpresso { exactly(4) { digit() } })
+
+    @Test
+    fun examplesBetweenTwoAndFourLettersMatchesPattern() =
+        assertAllMatch(kexpresso { between(2, 4) { letter() } })
+
+    @Test
+    fun examplesOneOrMoreAlphanumericMatchesPattern() =
+        assertAllMatch(kexpresso { oneOrMore { alphanumeric() } })
+
+    @Test
+    fun examplesAlternationCatOrDogMatchesPattern() =
+        assertAllMatch(kexpresso { oneOf({ literal("cat") }, { literal("dog") }) })
+
+    @Test
+    fun examplesNonCapturingGroupMatchesPattern() =
+        assertAllMatch(kexpresso { group { digit(); letter() } })
+
+    @Test
+    fun examplesCapturingGroupMatchesPattern() =
+        assertAllMatch(kexpresso { capture { digit() } })
+
+    @Test
+    fun examplesLiteralMatchesPattern() =
+        assertAllMatch(kexpresso { literal("hello") })
+
+    @Test
+    fun examplesSequenceDigitSpaceLetterMatchesPattern() =
+        assertAllMatch(kexpresso { digit(); whitespace(); letter() })
+
+    @Test
+    fun examplesZeroOrMoreDigitsMatchesPattern() =
+        assertAllMatch(kexpresso { zeroOrMore { digit() } })
+
+    @Test
+    fun examplesOptionalDigitMatchesPattern() =
+        assertAllMatch(kexpresso { optional { digit() } })
+
+    @Test
+    fun examplesAtLeastTwoLettersMatchesPattern() =
+        assertAllMatch(kexpresso { atLeast(2) { letter() } })
+
+    @Test
+    fun examplesWordCharMatchesPattern() =
+        assertAllMatch(kexpresso { oneOrMore { wordChar() } })
+
+    @Test
+    fun examplesLowercaseLetterMatchesPattern() =
+        assertAllMatch(kexpresso { lowercaseLetter() })
+
+    @Test
+    fun examplesAlternationThreeBranchesMatchesPattern() =
+        assertAllMatch(kexpresso { oneOf({ digit() }, { letter() }, { literal("_") }) })
+
+    @Test
+    fun examplesDeterministicSameSeedSameResult() {
+        val p = kexpresso { oneOrMore { digit() } }
+        assertEquals(p.examples(5, seed = 42), p.examples(5, seed = 42))
+    }
+
+    @Test
+    fun examplesDistinctForVariablePattern() {
+        val p = kexpresso { oneOrMore { digit() } }
+        val list = p.examples(5, seed = 0)
+        // All elements should be distinct (LinkedHashSet deduplication)
+        assertEquals(list.size, list.toSet().size)
+    }
+
+    @Test
+    fun examplesFixedLiteralReturnsSingleDistinctResult() {
+        val p = kexpresso { literal("espresso") }
+        val list = p.examples(10)
+        assertEquals(1, list.size, "A fixed literal can only produce one distinct example")
+        assertEquals("espresso", list[0])
+    }
+
+    @Test
+    fun examplesZeroCountReturnsEmpty() {
+        val p = kexpresso { digit() }
+        assertEquals(emptyList(), p.examples(0))
+    }
+
+    /** Best-effort: a Raw-containing pattern (via oneOf + raw) must not throw. */
+    @Test
+    fun examplesBestEffortRawDoesNotThrow() {
+        val p = kexpresso { raw("\\d{2,4}") }
+        val result = p.examples(3) // may not match; must not throw
+        assertNotNull(result)
+    }
 }

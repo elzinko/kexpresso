@@ -702,6 +702,44 @@ p.describe() // "start of text, one or more of (a digit), end of text"
 Domain helpers (e.g. `email()`) are emitted as raw fragments, so they describe as
 ``raw regex `…` `` rather than a fully decomposed phrase.
 
+### Generate matching examples
+
+`examples()` walks the internal AST and produces strings that satisfy `matches()`:
+
+```kotlin
+val drinkCode = kexpresso {
+    capitalLetter()
+    oneOrMore { lowercaseLetter() }
+}
+
+drinkCode.examples(3) // e.g. ["Ac", "Bs", "Ct"] — each passes drinkCode.matches(it)
+
+// Deterministic: same seed → same list
+drinkCode.examples(5, seed = 42)
+
+// Exact repetition
+val pinPattern = kexpresso { exactly(4) { digit() } }
+pinPattern.examples(3) // e.g. ["5279", "1836", "4021"]
+
+// Alternation
+val drinkMenu = kexpresso { oneOf({ literal("Espresso") }, { literal("Latte") }) }
+drinkMenu.examples(5) // ["Espresso", "Latte"]
+```
+
+**Honesty contract — when examples are guaranteed to match:**
+`examples()` guarantees that every returned string satisfies `matches()` when the
+pattern's AST contains only supported nodes: `Sequence`, `Literal`, `Token` primitives
+(digit, letter, whitespace, …), `Quantifier`, `Group`, and `Alternation`.
+
+**Best-effort cases (no match guarantee):**
+- `Raw` fragments — including domain helpers (`email()`, `ipv4()`, `isoDate()`, …) and
+  `Kexpresso.from(rawRegex)`, which all use raw nodes internally.
+- Lookarounds (`followedBy`, `precededBy`, …) — zero-width; skipped during generation.
+- Backreferences — the captured text is not tracked; an empty string is emitted.
+
+In best-effort mode `examples()` still returns without throwing — the results simply may
+not satisfy `matches()`.
+
 ### Interoperability
 
 ```kotlin
