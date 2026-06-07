@@ -3,10 +3,10 @@ import org.gradle.internal.os.OperatingSystem
 import org.jetbrains.kotlin.gradle.targets.js.dsl.ExperimentalWasmDsl
 
 plugins {
-    kotlin("multiplatform") version "1.9.24"
-    id("io.gitlab.arturbosch.detekt") version "1.23.6"
-    id("org.jetbrains.dokka") version "1.9.20"
-    id("org.jetbrains.kotlinx.kover") version "0.7.6"
+    kotlin("multiplatform") version "2.0.21"
+    id("io.gitlab.arturbosch.detekt") version "1.23.8"
+    id("org.jetbrains.dokka") version "2.0.0"
+    id("org.jetbrains.kotlinx.kover") version "0.8.3"
     id("com.vanniktech.maven.publish") version "0.30.0"
 }
 
@@ -144,29 +144,36 @@ tasks.named("check") {
 // ── Coverage gate (Kover) ─────────────────────────────────────────────────────
 // Replaces the former JaCoCo gate. Kover instruments the JVM tests and enforces a
 // line-coverage floor; an XML report is produced for Codecov.
-koverReport {
-    defaults {
-        xml {
-            onCheck = true
-        }
-        html {
-            onCheck = false
-        }
-        verify {
-            rule {
-                bound {
-                    minValue = 85
-                    metric = kotlinx.kover.gradle.plugin.dsl.MetricType.LINE
-                    aggregation = kotlinx.kover.gradle.plugin.dsl.AggregationType.COVERED_PERCENTAGE
+//
+// Kover 0.8.x replaced the old `koverReport {}` DSL with the `kover {}` extension
+// (`reports { total { xml/html/verify } }`). The XML report path also moved from
+// `build/reports/kover/report.xml` (0.7.x) to `build/reports/kover/report.xml` only
+// when explicitly set — by default 0.8 emits `build/reports/kover/reportRelease.xml`
+// /`report.xml` depending on variant. We pin `xml.xmlFile` to the historical path so
+// Codecov / ci.yml keep working unchanged.
+kover {
+    reports {
+        total {
+            xml {
+                onCheck = true
+                xmlFile = layout.buildDirectory.file("reports/kover/report.xml")
+            }
+            html {
+                onCheck = false
+            }
+            verify {
+                onCheck = true
+                rule {
+                    bound {
+                        minValue = 85
+                        coverageUnits = kotlinx.kover.gradle.plugin.dsl.CoverageUnit.LINE
+                        aggregationForGroup =
+                            kotlinx.kover.gradle.plugin.dsl.AggregationType.COVERED_PERCENTAGE
+                    }
                 }
             }
         }
     }
-}
-
-// Enforce the coverage gate as part of `check` (and therefore `build`).
-tasks.named("check") {
-    dependsOn(tasks.named("koverVerify"))
 }
 
 // ── Publishing ────────────────────────────────────────────────────────────────

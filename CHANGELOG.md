@@ -9,7 +9,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-_Nothing yet._
+### Changed
+
+- **Modernised the toolchain to Kotlin 2.x** (build/tooling only — no library API change):
+  - Kotlin Multiplatform `1.9.24` → **`2.0.21`** (K2 compiler).
+  - Detekt `1.23.6` → **`1.23.8`** (Kotlin 2.0 compatible).
+  - Kover `0.7.6` → **`0.8.3`** — migrated to the new `kover { reports { total { … } } }`
+    DSL; the line-coverage gate (≥ 85 %) and the Codecov XML report path
+    (`build/reports/kover/report.xml`) are unchanged.
+  - Dokka `1.9.20` → **`2.0.0`**, migrated to the Dokka Gradle plugin **V2**
+    (`org.jetbrains.dokka.experimental.gradle.pluginMode=V2EnabledWithHelpers`).
+    The HTML output still lands in `build/dokka/html`; the doc task is now
+    `dokkaGenerate` (was `dokkaHtml`) — `docs.yml` updated accordingly.
+  - Vanniktech Maven Publish stays at `0.30.0`; the Dokka-backed `-javadoc` jar
+    is unaffected.
+  - Gradle wrapper stays at **8.7**.
 
 ---
 
