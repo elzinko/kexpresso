@@ -519,6 +519,10 @@ Pair with `startOfText()`/`endOfText()` for whole-string validation.
 | `hashtag()` | Social-media hashtag `#word`, e.g. `#Espresso` | First char after `#` must be a letter, not a digit |
 | `mention()` | @mention (Twitter/X), 1–50 chars, e.g. `@barista` | Other platforms may allow longer names |
 | `e164Phone()` | E.164 phone number, e.g. `+14155552671` | Compact form only — no separators; no country-code validation |
+| `ipv6()` | IPv6 address — full or `::` -compressed, e.g. `2001:db8::1`, `::1` | Embedded IPv4 (`::ffff:192.168.1.1`) and zone IDs (`%eth0`) not supported |
+| `macAddress()` | IEEE 802 MAC address, colon- or hyphen-separated, e.g. `01:23:45:67:89:AB` | Cisco dot notation not supported; mixed separators rejected |
+| `base64()` | Standard Base64 string with optional `=`/`==` padding, e.g. `S2V4cHJlc3Nv` | Also matches empty string; URL-safe Base64 (`-`/`_`) not matched |
+| `jwt()` | JSON Web Token — three base64url segments separated by dots | Structural only — signature not verified, payload not decoded |
 
 **Example — validate an IPv4 address:**
 

@@ -200,3 +200,105 @@ fun KexpressoBuilder.mention(): KexpressoBuilder =
  */
 fun KexpressoBuilder.e164Phone(): KexpressoBuilder =
     append("\\+[1-9]\\d{6,14}")
+
+/**
+ * Appends a pattern that matches an IPv6 address — full and `::` -compressed forms.
+ *
+ * The pattern covers the most common representations:
+ * - Full form: eight groups of 1–4 hex digits separated by colons,
+ *   e.g. `"2001:0db8:85a3:0000:0000:8a2e:0370:7334"`.
+ * - `::` -compressed forms where one contiguous run of all-zero groups is replaced by
+ *   `::`, e.g. `"2001:db8::1"`, `"::1"` (loopback), `"::"` (all zeros).
+ *
+ * Example match: `"2001:0db8:85a3:0000:0000:8a2e:0370:7334"`, `"::1"`, `"fe80::1"`
+ *
+ * **Caveats:**
+ * - Embedded IPv4 notation (e.g. `"::ffff:192.168.1.1"`) does **not** match.
+ * - Zone IDs (e.g. `"fe80::1%eth0"`) do **not** match.
+ * - The pattern does **not** validate that a compressed form expands to exactly 128 bits;
+ *   over-specified forms like `"1:2:3:4:5:6:7::8"` may not match as intended.
+ * - For a plain IPv4 address, use [ipv4] instead.
+ */
+fun KexpressoBuilder.ipv6(): KexpressoBuilder =
+    // The branches are wrapped in a non-capturing group so the helper composes correctly with
+    // surrounding tokens (otherwise the bare `|` would bind only the first/last branch).
+    append(
+        "(?:" +
+            "(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}" +
+            "|(?:[0-9a-fA-F]{1,4}:){1,7}:" +
+            "|:(?::[0-9a-fA-F]{1,4}){1,7}" +
+            "|(?:[0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}" +
+            "|(?:[0-9a-fA-F]{1,4}:){1,5}(?::[0-9a-fA-F]{1,4}){1,2}" +
+            "|(?:[0-9a-fA-F]{1,4}:){1,4}(?::[0-9a-fA-F]{1,4}){1,3}" +
+            "|(?:[0-9a-fA-F]{1,4}:){1,3}(?::[0-9a-fA-F]{1,4}){1,4}" +
+            "|(?:[0-9a-fA-F]{1,4}:){1,2}(?::[0-9a-fA-F]{1,4}){1,5}" +
+            "|[0-9a-fA-F]{1,4}:(?::[0-9a-fA-F]{1,4}){1,6}" +
+            "|::" +
+            ")"
+    )
+
+/**
+ * Appends a pattern that matches an IEEE 802 MAC address.
+ *
+ * Both colon-separated (`01:23:45:67:89:AB`) and hyphen-separated
+ * (`01-23-45-67-89-AB`) forms are accepted. Mixed separators are not.
+ * Case-insensitive hex digits (`a`–`f` and `A`–`F`) are both valid.
+ *
+ * Example match: `"01:23:45:67:89:AB"`, `"01-23-45-67-89-ab"`
+ *
+ * **Caveats:**
+ * - Exactly 6 two-hex-digit octets are required; no short or long forms.
+ * - Dot-separated form (used by Cisco, e.g. `0123.4567.89ab`) does **not** match.
+ * - Mixed separators (e.g. `01:23-45:67-89:AB`) do **not** match.
+ */
+fun KexpressoBuilder.macAddress(): KexpressoBuilder =
+    // Wrapped in a non-capturing group so the two separator branches compose correctly with
+    // surrounding tokens (a bare `|` would let adjacent tokens bind to only one branch).
+    append(
+        "(?:" +
+            "(?:[0-9a-fA-F]{2}:){5}[0-9a-fA-F]{2}" +
+            "|(?:[0-9a-fA-F]{2}-){5}[0-9a-fA-F]{2}" +
+            ")"
+    )
+
+/**
+ * Appends a pattern that matches a standard Base64-encoded string.
+ *
+ * Accepts strings made up of groups of four Base64 characters (`A–Z`, `a–z`, `0–9`,
+ * `+`, `/`), with optional `=` or `==` padding at the end.
+ *
+ * Example match: `"S2V4cHJlc3Nv"`, `"dGVzdA=="`, `"YQ=="`, `"YQ"` (unpadded), `"TWE"`
+ *
+ * **Caveats:**
+ * - Also matches the **empty string** (zero groups, zero padding — valid per the pattern).
+ * - Does **not** enforce that the total character count is a multiple of 4; the padding
+ *   check (`==` / `=` suffix) relies on the trailing group matching correctly.
+ * - URL-safe Base64 characters (`-` and `_` instead of `+` and `/`) do **not** match —
+ *   for that, use [jwt] which uses the base64url alphabet.
+ */
+fun KexpressoBuilder.base64(): KexpressoBuilder =
+    // Trailing group accepts a final 2- or 3-char chunk with OR without padding, so both padded
+    // (`YQ==`, `TWE=`) and unpadded (`YQ`, `TWE`) Base64 are matched, as the docs advertise.
+    append(
+        "(?:[A-Za-z0-9+/]{4})*" +
+            "(?:[A-Za-z0-9+/]{2}(?:==)?|[A-Za-z0-9+/]{3}=?)?"
+    )
+
+/**
+ * Appends a pattern that matches a JSON Web Token (JWT) in compact serialisation.
+ *
+ * A JWT consists of three base64url-encoded segments (header, payload, signature)
+ * separated by dots, e.g. `"eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1c2VyIn0.abc123"`.
+ * Base64url characters are `A–Z`, `a–z`, `0–9`, `-`, and `_` (no padding `=`).
+ *
+ * Example match: `"eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1c2VyIn0.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"`
+ *
+ * **Caveats:**
+ * - Structural validation only — the pattern does **not** verify the signature, decode
+ *   the payload, or check expiry/claims.
+ * - Each segment must contain at least one character; empty segments do **not** match.
+ * - Standard Base64 characters `+` and `/` are not part of the base64url alphabet and
+ *   do **not** match here.
+ */
+fun KexpressoBuilder.jwt(): KexpressoBuilder =
+    append("[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+")
