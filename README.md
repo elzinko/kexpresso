@@ -6,7 +6,7 @@
 [![Maven Central](https://img.shields.io/maven-central/v/io.github.elzinko/kexpresso.svg?label=Maven%20Central)](https://central.sonatype.com/artifact/io.github.elzinko/kexpresso)
 [![JitPack](https://jitpack.io/v/elzinko/kexpresso.svg)](https://jitpack.io/#elzinko/kexpresso)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Kotlin](https://img.shields.io/badge/Kotlin-1.9.24-7F52FF?logo=kotlin)](https://kotlinlang.org)
+[![Kotlin](https://img.shields.io/badge/Kotlin-2.0.21-7F52FF?logo=kotlin)](https://kotlinlang.org)
 [![API docs](https://img.shields.io/badge/API_docs-Dokka-blue)](https://elzinko.github.io/kexpresso/)
 [![CodeQL](https://github.com/elzinko/kexpresso/actions/workflows/codeql.yml/badge.svg)](https://github.com/elzinko/kexpresso/actions/workflows/codeql.yml)
 [![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/elzinko/kexpresso/badge)](https://scorecard.dev/viewer/?uri=github.com/elzinko/kexpresso)
