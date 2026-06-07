@@ -4,7 +4,7 @@ import org.jetbrains.kotlin.gradle.targets.js.dsl.ExperimentalWasmDsl
 
 plugins {
     kotlin("multiplatform") version "1.9.24"
-    id("io.gitlab.arturbosch.detekt") version "1.23.6"
+    id("io.gitlab.arturbosch.detekt") version "1.23.8"
     id("org.jetbrains.dokka") version "1.9.20"
     id("org.jetbrains.kotlinx.kover") version "0.7.6"
     id("com.vanniktech.maven.publish") version "0.30.0"
