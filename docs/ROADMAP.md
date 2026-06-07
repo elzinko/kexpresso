@@ -56,16 +56,27 @@ API docs.
   31-test portable suite passes on JVM/JS/Wasm/Native; JVM-flavoured constructs stay JVM-only.
 - ✅ Tooling: jacoco → Kover, JMH removed (numbers stay in docs), multi-target publishing.
 
-### 🔭 Next (toward 1.0.0) — Make it a category
-- ✅ **Publish macOS/iOS Native artifacts** — the release now runs on a `macos-latest` runner
+### ✅ 0.6.0 — Apple/iOS publishing
+- ✅ **Publish macOS/iOS Native artifacts** — the release runs on a `macos-latest` runner
   (the most capable Kotlin/Native host), publishing every target — JVM, JS, Wasm, Linux,
   Windows, macOS, **iOS** (`iosArm64`/`iosX64`/`iosSimulatorArm64`) — from a single host with
   complete metadata. An `Apple & Native` PR workflow verifies the Apple targets.
-- **`kexpresso-test`** — `pattern.examples(n)` generates strings that match, for tests.
+
+### ✅ 0.7.0 — Adoption & extras
+- ✅ **Maven Central publishing** (Vanniktech plugin, GPG signing) — frictionless **no-token**
+  install. groupId → `io.github.elzinko` (JitPack keeps `com.github.elzinko` via `-PpublishGroup`).
+- ✅ **`pattern.examples(n)`** — AST-driven generation of strings that match (test data / fixtures).
+- ✅ **Runnable `:samples` module** — "try it in 30 seconds" + a living, compiled example.
+- ✅ **More helpers** — `ipv6`, `macAddress`, `base64`, `jwt`.
+
+### 🔭 Next (toward 1.0.0) — Make it a category
+- **Activate adoption** *(mostly maintainer)* — finish Maven Central setup (account/GPG/secrets),
+  then announce (r/Kotlin, Kotlin Slack, awesome-kotlin) and measure demand. The riskiest
+  untested assumption: do developers actually want this?
 - **Kotlin 2.x / Gradle 9 / Dokka 2** upgrades (the Dependabot majors deferred during KMP).
 - **Modularization** — `kexpresso-core` / `-analysis` / `-test` (likely premature until the lib grows).
-- **1.0.0** — once the above land and the new multiplatform coordinates have soaked, cut 1.0
-  with an API-stability commitment + migration notes.
+- **1.0.0** — once the above land and the multiplatform coordinates have soaked, cut 1.0 with an
+  API-stability commitment + migration notes.
 
 ## Assumptions to test (riskiest first)
 

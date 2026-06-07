@@ -9,8 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+_Nothing yet._
+
+---
+
+## [0.7.0] - 2026-06-06
+
 ### Added
 
+- **Runnable `:samples` module** — `./gradlew :samples:run` prints a guided tour of every
+  headline feature (a real "try it in 30 seconds", and a living, compiled usage example).
 - **Four new domain helpers in `Domains.kt`:**
   - `ipv6()` — IPv6 address, full and `::` -compressed forms (e.g. `2001:db8::1`, `::1`).
     Embedded IPv4 notation and zone IDs are not covered; documented caveats included.
@@ -291,7 +299,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Detekt** — static analysis configuration at `config/detekt/detekt.yml`.
 - **JaCoCo** — test coverage reporting.
 
-[Unreleased]: https://github.com/elzinko/kexpresso/compare/v0.6.0...HEAD
+[Unreleased]: https://github.com/elzinko/kexpresso/compare/v0.7.0...HEAD
+[0.7.0]: https://github.com/elzinko/kexpresso/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/elzinko/kexpresso/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/elzinko/kexpresso/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/elzinko/kexpresso/compare/v0.3.0...v0.4.0
