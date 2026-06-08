@@ -142,7 +142,8 @@ The `Release` job (on `macos-latest`, the only host that can build the Apple/iOS
 The workflow runs **`publishAndReleaseToMavenCentral`**: it uploads the signed artifacts,
 waits for the Central Portal's validation, and **auto-releases** on success — no manual
 Portal click. Central's validation gates the release: if signing or POM metadata is invalid,
-nothing is published (the GitHub Release + Packages steps already ran, so just fix and re-tag).
+nothing is published — and because Central runs **before** the immutable GitHub Packages upload,
+that step hasn't run either, so you can simply fix and re-tag the same version cleanly.
 
 - Follow the staging → validation → published transition under
   <https://central.sonatype.com/> → **Deployments** if you wish.

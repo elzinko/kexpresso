@@ -53,23 +53,14 @@ jobs:
       - name: Sanity test (JVM)
         run: ./gradlew -PreleaseVersion=${{ steps.version.outputs.value }} jvmTest
 
-      - name: Publish to GitHub Packages
-        # `publishAllPublicationsToGitHubPackagesRepository` builds every target's artifacts
-        # (incl. Apple/iOS klibs) and the complete root metadata, then uploads them to GitHub
-        # Packages only — WITHOUT triggering the Maven Central / signing tasks (the plain
-        # `publish` task would now also target the Central repo). No cross-platform tests run.
-        run: >-
-          ./gradlew -PreleaseVersion=${{ steps.version.outputs.value }}
-          publishAllPublicationsToGitHubPackagesRepository
-        env:
-          GITHUB_ACTOR: ${{ github.actor }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      # Preflight: only attempt the Central publish when ALL FOUR required secrets are present.
-      # Gating on the username alone would let a partial setup (e.g. username set but a signing
-      # secret missing) run the upload with empty Gradle properties and fail the release AFTER
-      # GitHub Packages was already published. `secrets` can't be read in a step-level `if:`, so
-      # we map them to env here and expose a single `ready` flag.
+      # ── Publish to Maven Central FIRST, before the immutable GitHub Packages upload. ──
+      # Central's validation can fail (especially on first setup) and `publishAndReleaseToMaven
+      # Central` makes that failure part of this step. Doing Central first means a failure leaves
+      # the immutable GitHub Packages repo UNTOUCHED, so re-tagging the same version is clean
+      # (otherwise the GitHub Packages re-upload would hit duplicate-artifact errors).
+      #
+      # Preflight: only attempt Central when ALL FOUR secrets are present (a partial setup is
+      # skipped, not half-run). `secrets` can't be read in a step-level `if:`, so map them to env.
       - name: Check Maven Central secrets
         id: central_secrets
         env:
@@ -85,21 +76,29 @@ jobs:
             echo "::notice::Maven Central secrets incomplete — skipping Central publish. See docs/PUBLISHING.md."
           fi
 
-      # Publish the signed artifacts to Maven Central (Sonatype Central Portal). Runs only when
-      # all four secrets exist (see preflight) so the release never half-fails before the
-      # maintainer has finished setup (docs/PUBLISHING.md). The secrets are mapped to the
-      # ORG_GRADLE_PROJECT_* names the Vanniktech plugin reads. `publishAndReleaseToMavenCentral`
-      # uploads, waits for Central's validation, and auto-releases on success (no manual Portal
-      # click). Central validation gates the release: on failure nothing is published — the
-      # GitHub Release + Packages steps above have already succeeded, so re-run after fixing.
       - name: Publish to Maven Central
         if: ${{ steps.central_secrets.outputs.ready == 'true' }}
+        # Uploads, waits for Central's validation, and auto-releases on success (no manual Portal
+        # click). If it fails, nothing is published to Central and GitHub Packages hasn't run yet
+        # → fix and re-tag cleanly.
         run: ./gradlew -PreleaseVersion=${{ steps.version.outputs.value }} publishAndReleaseToMavenCentral
         env:
           ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
           ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
           ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.SIGNING_IN_MEMORY_KEY }}
           ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.SIGNING_IN_MEMORY_KEY_PASSWORD }}
+
+      - name: Publish to GitHub Packages
+        # Runs AFTER Central so a Central validation failure doesn't leave an immutable GitHub
+        # Packages version blocking a clean re-tag. Uploads every target's artifacts + the
+        # complete root metadata to GitHub Packages only (the plain `publish` task would also
+        # target the Central repo). No cross-platform tests run.
+        run: >-
+          ./gradlew -PreleaseVersion=${{ steps.version.outputs.value }}
+          publishAllPublicationsToGitHubPackagesRepository
+        env:
+          GITHUB_ACTOR: ${{ github.actor }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       # build/libs holds the per-target artifacts staged for the GitHub Release page
       # (jvm jar, js/wasm klibs, metadata + sources jars). The native klibs themselves
