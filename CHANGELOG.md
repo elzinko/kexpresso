@@ -9,8 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+_Nothing yet._
+
+---
+
+## [0.8.0] - 2026-06-07
+
 ### Changed
 
+- **First release published to Maven Central** — `io.github.elzinko:kexpresso` is now
+  installable with no token. The release workflow auto-releases via
+  `publishAndReleaseToMavenCentral` (Central validates before publishing).
 - **Modernised the toolchain to Kotlin 2.x** (build/tooling only — no library API change):
   - Kotlin Multiplatform `1.9.24` → **`2.0.21`** (K2 compiler).
   - Detekt `1.23.6` → **`1.23.8`** (Kotlin 2.0 compatible).
@@ -313,7 +322,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Detekt** — static analysis configuration at `config/detekt/detekt.yml`.
 - **JaCoCo** — test coverage reporting.
 
-[Unreleased]: https://github.com/elzinko/kexpresso/compare/v0.7.0...HEAD
+[Unreleased]: https://github.com/elzinko/kexpresso/compare/v0.8.0...HEAD
+[0.8.0]: https://github.com/elzinko/kexpresso/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/elzinko/kexpresso/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/elzinko/kexpresso/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/elzinko/kexpresso/compare/v0.4.0...v0.5.0
