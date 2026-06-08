@@ -139,14 +139,16 @@ The `Release` job (on `macos-latest`, the only host that can build the Apple/iOS
 3. **Publishes signed artifacts to Maven Central** (this step, once the four secrets exist).
 4. Generates checksums, attests provenance, and creates the GitHub Release.
 
-By default the workflow runs `publishToMavenCentral`, which uploads to a **staging repository**
-on the Central Portal. To finish:
+The workflow runs **`publishAndReleaseToMavenCentral`**: it uploads the signed artifacts,
+waits for the Central Portal's validation, and **auto-releases** on success — no manual
+Portal click. Central's validation gates the release: if signing or POM metadata is invalid,
+nothing is published (the GitHub Release + Packages steps already ran, so just fix and re-tag).
 
-- Go to <https://central.sonatype.com/> → **Deployments**, review the staged deployment, and
-  click **Publish** to release it to Maven Central.
-- Prefer fully automated releases? Change the workflow step from `publishToMavenCentral` to
-  **`publishAndReleaseToMavenCentral`** — it auto-releases after a successful upload (the
-  staged deployment must pass Central's validation).
+- Follow the staging → validation → published transition under
+  <https://central.sonatype.com/> → **Deployments** if you wish.
+- Prefer a manual review gate? Change the workflow step from
+  `publishAndReleaseToMavenCentral` back to **`publishToMavenCentral`** — it stops at a staged
+  deployment for you to review and **Publish** by hand on the Portal.
 
 ### Verify
 

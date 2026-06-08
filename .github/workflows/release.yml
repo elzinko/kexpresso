@@ -88,12 +88,13 @@ jobs:
       # Publish the signed artifacts to Maven Central (Sonatype Central Portal). Runs only when
       # all four secrets exist (see preflight) so the release never half-fails before the
       # maintainer has finished setup (docs/PUBLISHING.md). The secrets are mapped to the
-      # ORG_GRADLE_PROJECT_* names the Vanniktech plugin reads. Use `publishToMavenCentral` to
-      # upload to a staging repo (manual release on the Portal), or `publishAndReleaseToMavenCentral`
-      # to auto-release after a successful upload.
+      # ORG_GRADLE_PROJECT_* names the Vanniktech plugin reads. `publishAndReleaseToMavenCentral`
+      # uploads, waits for Central's validation, and auto-releases on success (no manual Portal
+      # click). Central validation gates the release: on failure nothing is published — the
+      # GitHub Release + Packages steps above have already succeeded, so re-run after fixing.
       - name: Publish to Maven Central
         if: ${{ steps.central_secrets.outputs.ready == 'true' }}
-        run: ./gradlew -PreleaseVersion=${{ steps.version.outputs.value }} publishToMavenCentral
+        run: ./gradlew -PreleaseVersion=${{ steps.version.outputs.value }} publishAndReleaseToMavenCentral
         env:
           ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
           ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
