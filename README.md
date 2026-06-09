@@ -92,7 +92,7 @@ required. Just add the dependency.
 ```kotlin
 // build.gradle.kts
 dependencies {
-    implementation("io.github.elzinko:kexpresso:<version>")
+    implementation("io.github.elzinko:kexpresso:0.8.0")
 }
 ```
 
@@ -110,7 +110,7 @@ repositories {
 <dependency>
     <groupId>io.github.elzinko</groupId>
     <artifactId>kexpresso</artifactId>
-    <version><!-- version --></version>
+    <version>0.8.0</version>
 </dependency>
 ```
 
@@ -121,7 +121,7 @@ Maven Central is the recommended source. Two alternatives remain available:
 - **JitPack** — builds on demand from a git tag/commit; coordinate `com.github.elzinko:kexpresso:<tag>`.
   Serves `jvm`, `js`, `wasmJs`, `linuxX64`, `mingwX64` only (no Apple/iOS — JitPack builds on Linux).
   Add `maven { url = uri("https://jitpack.io") }` to your repositories.
-- **GitHub Packages** — all targets incl. Apple/iOS; coordinate `io.github.elzinko:kexpresso:<version>`.
+- **GitHub Packages** — all targets incl. Apple/iOS; coordinate `io.github.elzinko:kexpresso:0.8.0`.
   Requires a GitHub token (a GitHub limitation, even for public packages) — see
   [Where the artifacts are hosted](#where-the-artifacts-are-hosted-important-for-appleios).
 
@@ -158,7 +158,7 @@ via Gradle module metadata:
 kotlin {
     sourceSets {
         commonMain.dependencies {
-            implementation("io.github.elzinko:kexpresso:<version>")
+            implementation("io.github.elzinko:kexpresso:0.8.0")
         }
     }
 }
@@ -170,12 +170,12 @@ A **plain-Maven (JVM-only)** consumer must use the target-suffixed coordinate in
 <dependency>
     <groupId>io.github.elzinko</groupId>
     <artifactId>kexpresso-jvm</artifactId>
-    <version><!-- version --></version>
+    <version>0.8.0</version>
 </dependency>
 ```
 
 > **Breaking change (since the multiplatform release):** artifact coordinates now carry a
-> target suffix. Gradle resolves `io.github.elzinko:kexpresso:<version>` to the right
+> target suffix. Gradle resolves `io.github.elzinko:kexpresso:0.8.0` to the right
 > target automatically through Gradle metadata, but tools that ignore Gradle metadata
 > (e.g. plain Maven) must reference `kexpresso-jvm` directly.
 

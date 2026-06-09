@@ -139,6 +139,35 @@ The `Release` job (on `macos-latest`, the only host that can build the Apple/iOS
 3. **Publishes signed artifacts to Maven Central** (this step, once the four secrets exist).
 4. Generates checksums, attests provenance, and creates the GitHub Release.
 
+### README install-snippet version
+
+The README's install snippets (Gradle, KMP `commonMain`, both Maven blocks, prose
+coordinates) show a concrete version — they are kept honest by two mechanisms:
+
+- **CI guardrail (`ci.yml`)** — every PR runs `scripts/sync-readme-version.sh
+  --check <version-from-build.gradle.kts>`. If the README has drifted from the
+  project version, the build fails. A stale README cannot reach `main`.
+- **Auto-PR on release (`sync-readme-version.yml`)** — chained via
+  `workflow_run` after the `Release` workflow completes. (We can't use
+  `release: published` because the release is created by `gh release create`
+  with `GITHUB_TOKEN`, and GitHub doesn't fire downstream workflows for
+  events caused by `GITHUB_TOKEN` — `workflow_run` is the documented escape
+  hatch.) The workflow opens a PR with the README bumped to the released
+  version. **Merge it with one click.**
+
+  *Note on auto-merge:* the auto-PR is pushed by `GITHUB_TOKEN` too, so CI
+  doesn't run on it. Push an empty commit on the branch to trigger CI:
+  `git commit --allow-empty -m "trigger ci" && git push`, then squash-merge.
+
+**Local one-liner during release prep** (recommended): after bumping
+`version` in `build.gradle.kts`, run
+
+```bash
+scripts/sync-readme-version.sh "$(sed -nE 's/^version = .*\"([^"]+)\".*$/\1/p' build.gradle.kts | head -1)"
+```
+
+and include the README change in the same commit as the version bump.
+
 The workflow runs **`publishAndReleaseToMavenCentral`**: it uploads the signed artifacts,
 waits for the Central Portal's validation, and **auto-releases** on success — no manual
 Portal click. Central's validation gates the release: if signing or POM metadata is invalid,
