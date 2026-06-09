@@ -30,6 +30,22 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@d9c87d481d55275bb5441eef3fe0e46805f9ef70 # v3.5.0
 
+      # Guardrail: README install snippets must show the project version declared
+      # in build.gradle.kts. The release workflow auto-PRs an update on every
+      # `release: published`, but if for any reason that PR is missed (or someone
+      # edits build.gradle.kts manually), this step fails the build instead of
+      # silently shipping stale install instructions. Fix in one shot with:
+      #   scripts/sync-readme-version.sh <version>
+      - name: Check README install version is in sync
+        run: |
+          VERSION="$(sed -nE 's/^version = .*\"([^"]+)\".*$/\1/p' build.gradle.kts | head -1)"
+          if [ -z "$VERSION" ]; then
+            echo "::error::Could not parse version from build.gradle.kts" >&2
+            exit 1
+          fi
+          echo "Project version: $VERSION"
+          bash scripts/sync-readme-version.sh --check "$VERSION"
+
       - name: Build, test and run Detekt
         run: ./gradlew build --stacktrace
 

@@ -1,0 +1,106 @@
+name: Sync README version
+
+# ── Triggers ──────────────────────────────────────────────────────────────────
+# • Automatic: fires when a GitHub Release is published (the Release workflow
+#   creates the release from a v* tag, which fires this workflow).
+# • Manual: workflow_dispatch lets you re-run for any version without a release
+#   (useful for fixing a botched README or back-filling older versions).
+#
+# This workflow opens a PR with the README install snippets updated to the
+# released version. The maintainer merges that PR with one click (the CI gate
+# `Build, test & lint` validates the bump). The CI guardrail in `ci.yml`
+# enforces that main never falls out of sync — so even if this workflow is
+# skipped or the PR is closed, the next PR touching main will fail until the
+# script is run.
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to sync (without leading v), e.g. 1.2.3"
+        required: true
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  sync:
+    name: Sync install-snippet versions in README
+    runs-on: ubuntu-latest
+    steps:
+      # Check out main (not the tag) so the PR targets the default branch.
+      # fetch-depth: 0 is required so we can push a new branch from here.
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          ref: main
+          fetch-depth: 0
+
+      # ── Resolve the version to sync ──────────────────────────────────────────
+      # For a release event the tag is like "v1.2.3"; strip the leading "v".
+      # For workflow_dispatch the user provides the bare version string directly.
+      - name: Resolve version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "value=${{ github.event.inputs.version }}" >> "$GITHUB_OUTPUT"
+          else
+            RAW="${{ github.event.release.tag_name }}"
+            echo "value=${RAW#v}" >> "$GITHUB_OUTPUT"
+          fi
+
+      # ── Update README.md ─────────────────────────────────────────────────────
+      - name: Run sync script
+        run: bash scripts/sync-readme-version.sh "${{ steps.version.outputs.value }}"
+
+      # ── Self-verification (mirrors the CI guardrail in ci.yml). ──────────────
+      - name: Verify README is in sync
+        run: bash scripts/sync-readme-version.sh --check "${{ steps.version.outputs.value }}"
+
+      # ── Early-exit if README was already up-to-date ──────────────────────────
+      - name: Check for changes
+        id: diff
+        run: |
+          if git diff --quiet; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "README already at ${{ steps.version.outputs.value }}, nothing to do."
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Configure git
+        if: steps.diff.outputs.changed == 'true'
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Create branch, commit, and push
+        if: steps.diff.outputs.changed == 'true'
+        run: |
+          BRANCH="chore/readme-version-${{ steps.version.outputs.value }}"
+          git checkout -b "$BRANCH"
+          git add README.md
+          git commit -m "docs(readme): sync install snippets to v${{ steps.version.outputs.value }}"
+          git push origin "$BRANCH"
+
+      # ── Open a PR. The maintainer merges it manually (one click). ────────────
+      # We intentionally do NOT use --auto: pushes authenticated with the default
+      # GITHUB_TOKEN do not trigger workflows (a GitHub security feature), so the
+      # required "Build, test & lint" check would never appear on the auto-PR and
+      # --auto would hang. The CI guardrail in ci.yml makes a stale README
+      # impossible to ship even if this PR is delayed — when the maintainer next
+      # opens any PR, the check will fail until the README is in sync. So this
+      # workflow is a convenience layer, not a correctness gate.
+      - name: Open PR
+        if: steps.diff.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION="${{ steps.version.outputs.value }}"
+          BRANCH="chore/readme-version-${VERSION}"
+          gh pr create \
+            --base main \
+            --head "$BRANCH" \
+            --title "docs(readme): sync install snippets to v${VERSION}" \
+            --body $'Automated PR — updates README install snippets to `'"${VERSION}"$'`.\n\nThis workflow self-verified with `scripts/sync-readme-version.sh --check '"${VERSION}"$'` before opening this PR.\n\n**Why a PR (and not a direct push)?** Branch protection on `main` requires the `Build, test & lint` check. Once you push a fixup commit / approve, the maintainer can merge with one click.\n\n**Safety net:** the CI guardrail in `ci.yml` runs the same `--check` on every PR — a stale README cannot reach `main` even if this PR is delayed.'

@@ -9,7 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-_Nothing yet._
+### Added
+
+- README install snippets now show the current release version (`0.8.0`) and are kept in sync automatically via the `sync-readme-version` workflow on every future release.
 
 ---
 
