@@ -147,16 +147,17 @@ coordinates) show a concrete version — they are kept honest by two mechanisms:
 - **CI guardrail (`ci.yml`)** — every PR runs `scripts/sync-readme-version.sh
   --check <version-from-build.gradle.kts>`. If the README has drifted from the
   project version, the build fails. A stale README cannot reach `main`.
-- **Auto-PR on release (`sync-readme-version.yml`)** — when a GitHub Release is
-  published, this workflow opens a PR that updates the README to the released
-  version. **Merge it with one click** — the CI guardrail will then pass for
-  every subsequent PR.
+- **Auto-PR on release (`sync-readme-version.yml`)** — chained via
+  `workflow_run` after the `Release` workflow completes. (We can't use
+  `release: published` because the release is created by `gh release create`
+  with `GITHUB_TOKEN`, and GitHub doesn't fire downstream workflows for
+  events caused by `GITHUB_TOKEN` — `workflow_run` is the documented escape
+  hatch.) The workflow opens a PR with the README bumped to the released
+  version. **Merge it with one click.**
 
-  *Note on auto-merge:* pushes authenticated with the default `GITHUB_TOKEN`
-  don't trigger workflows (a GitHub security feature), so CI does not run on
-  the auto-PR. The auto-PR's body explains the situation; the simplest path is
-  to push an empty commit (`git commit --allow-empty -m "trigger ci" && git
-  push`) on the branch, which triggers CI and lets you squash-merge normally.
+  *Note on auto-merge:* the auto-PR is pushed by `GITHUB_TOKEN` too, so CI
+  doesn't run on it. Push an empty commit on the branch to trigger CI:
+  `git commit --allow-empty -m "trigger ci" && git push`, then squash-merge.
 
 **Local one-liner during release prep** (recommended): after bumping
 `version` in `build.gradle.kts`, run
