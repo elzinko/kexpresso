@@ -33,7 +33,7 @@ jobs:
           java-version: "17"
 
       - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@d9c87d481d55275bb5441eef3fe0e46805f9ef70 # v3.5.0
+        uses: gradle/actions/setup-gradle@50e97c2cd7a37755bbfafc9c5b7cafaece252f6e # v6.1.0
 
       - name: Generate Dokka HTML
         # Dokka 2.x (Gradle plugin V2) replaced the `dokkaHtml` task with `dokkaGenerate`
