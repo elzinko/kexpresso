@@ -172,7 +172,7 @@ All 16 extension functions follow the same pattern: `fun KexpressoBuilder.X(): K
 | Symbol | Signature (abbreviated) | Mark | Rationale |
 |---|---|---|
 | `Kexpresso.from` | `fun Kexpresso.from(regex: String): KexpressoPattern` | 🟡 | Matching correctness is guaranteed; AST reconstruction is explicitly "best-effort." The parser does not cover atomic groups, inline flags, possessive quantifiers, or Unicode property escapes — these all degrade to `Raw`. Useful but inherently incomplete. Mark `@ExperimentalKexpressoApi`. |
-| `KexpressoPattern.toKexpressoCode` | `fun KexpressoPattern.toKexpressoCode(): String` | 🟡 | Depends on AST quality; best-effort for `Raw` nodes. Useful for tooling and debugging but the output is not guaranteed to round-trip perfectly, especially for patterns built via `Kexpresso.from` or containing domain helpers. Mark `@ExperimentalKexpressoApi`. |
+| `KexpressoPattern.toKexpressoCode` | `fun KexpressoPattern.toKexpressoCode(): String` | 🟡 | Depends on AST quality. Patterns containing domain helpers (which always emit `Raw`) won't round-trip cleanly; patterns from `Kexpresso.from(regex)` round-trip for the parser's supported subset, with `Raw` fallback for unmodelled constructs (atomic groups, possessive quantifiers, inline flags). Mark `@ExperimentalKexpressoApi`. |
 | `KexpressoCodeGenerator` | `internal object KexpressoCodeGenerator` | 🟠 (already internal) | Correctly `internal`. No action needed. |
 | `KexpressoCodeGenerator.INDENT_UNIT` | `const val INDENT_UNIT: String` | 🟠 | `INDENT_UNIT` is `internal` on an `internal object`, so it is effectively non-public. Correct. |
 | `RegexParser` | `internal class RegexParser` | 🟠 (already internal) | Correctly `internal`. No action needed. |
@@ -257,12 +257,21 @@ All 16 extension functions follow the same pattern: `fun KexpressoBuilder.X(): K
   surprising. Either document it explicitly (and commit to it as a feature), or make `build()`
   `internal` and remove the escape hatch.
 
-- **`Raw` node is never described structurally**: Any pattern touched by a domain helper or
-  `Kexpresso.from` will have `Raw` nodes in its AST. `KexpressoPattern.describe()` returns
-  `raw regex \`…\`` for those nodes, and `examples()` emits empty strings. Users who discover
-  this inconsistency through unexpected `describe()` output will be surprised. Adding a note to
-  the primary `describe()` KDoc (and `examples()` KDoc) that the quality depends on AST
-  completeness would improve the experience.
+- **`Raw` nodes degrade introspection — but not uniformly**: Two distinct classes hit this,
+  and conflating them would mislead the freeze plan.
+  - **Always degraded:** every domain helper in `Domains.kt` calls `append(raw)`, so any
+    pattern containing one carries `Raw` nodes regardless of complexity.
+  - **Sometimes degraded:** `Kexpresso.from(regex)` runs `RegexParser(regex).parse()` first
+    and **produces a real, structured AST when the parser understands the input** — which
+    covers the common shapes (sequences, literals, character classes, anchors, quantifiers,
+    groups, alternations). Only constructs the parser can't model — atomic groups, possessive
+    quantifiers, inline flags, certain backreferences, Unicode property escapes — fall back
+    to `Raw`. So most imported regexes describe and round-trip cleanly.
+
+  `KexpressoPattern.describe()` returns `raw regex \`…\`` for `Raw` nodes, and `examples()`
+  emits empty strings for them. Adding a note to the `describe()` and `examples()` KDocs
+  that introspection quality depends on AST completeness — with a pointer to the two classes
+  above — would set expectations correctly without overstating the degradation.
 
 ---
 
