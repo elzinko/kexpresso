@@ -42,7 +42,7 @@ jobs:
     steps:
       # Check out main (not the tag) so the PR targets the default branch.
       # fetch-depth: 0 is required so we can push a new branch from here.
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
           ref: main
           fetch-depth: 0
