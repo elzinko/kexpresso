@@ -6,6 +6,8 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 
+@OptIn(ExperimentalKexpressoApi::class)
+
 /**
  * Tests for the reverse feature: [Kexpresso.from] and [KexpressoPattern.toKexpressoCode].
  *

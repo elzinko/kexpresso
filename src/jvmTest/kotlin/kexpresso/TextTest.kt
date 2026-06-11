@@ -4,6 +4,8 @@ import kotlin.test.Test
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
+@OptIn(ExperimentalKexpressoApi::class)
+
 /**
  * Tests for text-domain helpers defined in [Text.kt].
  */

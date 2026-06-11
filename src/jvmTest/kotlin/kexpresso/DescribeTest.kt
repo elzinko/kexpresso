@@ -10,6 +10,7 @@ import kotlin.test.assertEquals
  * The describe-wording assertions lock the English output; the round-trip assertions make the
  * AST → regex contract explicit (duplicating the broader regression guarantee on purpose).
  */
+@OptIn(ExperimentalKexpressoApi::class)
 class DescribeTest {
 
     // ── describe(): representative patterns ───────────────────────────────────

@@ -5,6 +5,8 @@ import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 import kotlin.test.assertEquals
 
+@OptIn(ExperimentalKexpressoApi::class)
+
 /**
  * Tests for domain helpers defined in [Domains.kt].
  */

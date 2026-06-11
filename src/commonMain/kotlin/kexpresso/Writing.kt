@@ -8,6 +8,7 @@ package kexpresso
  *
  * Example match: `"Espresso is perfect!"`
  */
+@ExperimentalKexpressoApi
 fun KexpressoBuilder.sentence(): KexpressoBuilder {
     uppercaseLetter()
     word()
@@ -21,6 +22,7 @@ fun KexpressoBuilder.sentence(): KexpressoBuilder {
  *
  * Example match: `"Latte is smooth. Espresso is strong!"`
  */
+@ExperimentalKexpressoApi
 fun KexpressoBuilder.paragraph(): KexpressoBuilder {
     sentence()
     zeroOrMore { whitespace(); sentence() }

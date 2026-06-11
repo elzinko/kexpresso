@@ -8,6 +8,8 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
+@OptIn(ExperimentalKexpressoApi::class)
+
 /**
  * Portable test suite that runs on **every** Kotlin Multiplatform target (JVM + JS/IR).
  *

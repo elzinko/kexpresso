@@ -20,6 +20,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `lowercaseLetter()`.
 - `handle()` — canonical name for the `[a-zA-Z0-9_-]+` text helper (usernames, slugs).
 
+### Changed
+
+- **Best-effort APIs are now marked `@ExperimentalKexpressoApi`** (compiler warning with
+  opt-in, per `docs/API_REVIEW.md`): all 16 domain helpers (`Domains.kt`), the text helpers
+  (`word`, `handle`, `email`, `url`), `sentence()`/`paragraph()`, `examples()`,
+  `Kexpresso.from()`, `toKexpressoCode()`, the ReDoS analysis surface (`analyze()`,
+  `ReDoSReport`/`ReDoSFinding`/`ReDoSSeverity`, `isPotentiallyVulnerable`), the
+  `KexpressoPattern(source, regex)` raw constructor, and `KexpressoBuilder.build()`.
+  **No behaviour change** — existing code compiles and runs identically; callers see a
+  warning until they add `@OptIn(ExperimentalKexpressoApi::class)`. The stable core
+  (builder DSL, `matches`/`find`/`replace`/`split`, `describe()`) is unmarked and will be
+  frozen as-is at 1.0.
+
 ### Deprecated
 
 Pre-1.0 API polish (see `docs/API_REVIEW.md`). The deprecated names keep working

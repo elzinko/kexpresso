@@ -11,6 +11,7 @@ import kotlin.test.assertTrue
  * Unit tests for [KexpressoBuilder] primitives, quantifiers, character classes,
  * anchors, and grouping/alternation constructs.
  */
+@OptIn(ExperimentalKexpressoApi::class)
 class KexpressoBuilderTest {
 
     // ── helper ───────────────────────────────────────────────────────────────

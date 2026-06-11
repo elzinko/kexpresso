@@ -20,6 +20,7 @@ import kotlin.test.assertTrue
  * runtime regression.
  */
 @Suppress("DEPRECATION")
+@OptIn(ExperimentalKexpressoApi::class)
 class Api10RenamesTest {
 
     // ── handle() ↔ pseudo() ───────────────────────────────────────────────────

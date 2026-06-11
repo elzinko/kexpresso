@@ -1,3 +1,5 @@
+@file:OptIn(kexpresso.ExperimentalKexpressoApi::class)
+
 package kexpresso.samples
 
 import kexpresso.Kexpresso
