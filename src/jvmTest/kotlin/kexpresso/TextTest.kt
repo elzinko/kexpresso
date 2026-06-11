@@ -32,11 +32,11 @@ class TextTest {
         assertFalse(p.matches("cold_brew"))
     }
 
-    // ── pseudo ────────────────────────────────────────────────────────────────
+    // ── handle (formerly pseudo) ──────────────────────────────────────────────
 
     @Test
-    fun `pseudo matches alphanumeric with hyphens and underscores`() {
-        val p = kexpresso { pseudo() }
+    fun `handle matches alphanumeric with hyphens and underscores`() {
+        val p = kexpresso { handle() }
         assertTrue(p.matches("cold-brew"))
         assertTrue(p.matches("cold_brew"))
         assertTrue(p.matches("Espresso"))
@@ -44,14 +44,14 @@ class TextTest {
     }
 
     @Test
-    fun `pseudo does not match empty string`() {
-        val p = kexpresso { pseudo() }
+    fun `handle does not match empty string`() {
+        val p = kexpresso { handle() }
         assertFalse(p.matches(""))
     }
 
     @Test
-    fun `pseudo does not match spaces`() {
-        val p = kexpresso { pseudo() }
+    fun `handle does not match spaces`() {
+        val p = kexpresso { handle() }
         assertFalse(p.matches("cold brew"))
     }
 

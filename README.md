@@ -250,7 +250,7 @@ not available on JS, Wasm, or Native.
 
 ```kotlin
 val drinkName = kexpresso {
-    capitalLetter()
+    uppercaseLetter()
     oneOrMore { letter() }
 }
 
@@ -306,13 +306,12 @@ sentencePattern.matches("No punctuation at the end")  // false
 | `digit()` | `\d` | Decimal digit 0–9 |
 | `nonDigit()` | `\D` | Any non-digit |
 | `whitespace()` | `\s` | Space, tab, newline, … |
-| `space()` | `\s` | Alias for `whitespace()` |
 | `nonWhitespace()` | `\S` | Any non-whitespace |
 | `wordChar()` | `\w` | Letter, digit, or `_` |
 | `nonWordChar()` | `\W` | Not a word character |
 | `anyChar()` | `.` | Any character except newline |
 | `letter()` | `[a-zA-Z]` | ASCII letters only |
-| `capitalLetter()` | `[A-Z]` | ASCII uppercase letters |
+| `uppercaseLetter()` | `[A-Z]` | ASCII uppercase letters |
 | `lowercaseLetter()` | `[a-z]` | ASCII lowercase letters |
 | `alphanumeric()` | `[a-zA-Z0-9]` | ASCII letter or digit |
 | `tab()` | `\t` | Horizontal tab |
@@ -476,7 +475,7 @@ the primitives above.
 | Method | Pattern | Matches |
 |---|---|---|
 | `word()` | `[a-zA-Z0-9]+` | One or more alphanumeric characters (e.g. `Espresso`, `Cappuccino42`) |
-| `pseudo()` | `[a-zA-Z0-9_-]+` | Like `word()` but also allows `_` and `-` (e.g. `cold-brew_2024`) |
+| `handle()` | `[a-zA-Z0-9_-]+` | Like `word()` but also allows `_` and `-` — usernames and slugs (e.g. `cold-brew_2024`) |
 | `email()` | see source | A broadly valid email address (e.g. `barista@coffee.shop`) |
 | `url()` | see source | An HTTP or HTTPS URL (e.g. `https://coffee.shop/menu`) |
 
@@ -496,7 +495,7 @@ paragraphPattern.matches("Latte is smooth. Espresso is bold!") // true
 paragraphPattern.matches("latte is lowercase.")                 // false
 ```
 
-> Note: `sentence()` builds the first word as `capitalLetter()` + `word()`, so the first
+> Note: `sentence()` builds the first word as `uppercaseLetter()` + `word()`, so the first
 > word must be at least two characters long (one uppercase letter followed by at least one
 > alphanumeric character).
 
@@ -712,7 +711,7 @@ Domain helpers (e.g. `email()`) are emitted as raw fragments, so they describe a
 
 ```kotlin
 val drinkCode = kexpresso {
-    capitalLetter()
+    uppercaseLetter()
     oneOrMore { lowercaseLetter() }
 }
 
