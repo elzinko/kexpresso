@@ -5,7 +5,7 @@ package kexpresso
  *
  * Example:
  * ```kotlin
- * val pattern = kexpresso { startOfText(); capitalLetter(); oneOrMore { letter() }; endOfText() }
+ * val pattern = kexpresso { startOfText(); uppercaseLetter(); oneOrMore { letter() }; endOfText() }
  * pattern.matches("Espresso") // true
  * ```
  *
@@ -251,7 +251,7 @@ private fun requireValidGroupName(name: String) {
  * ```kotlin
  * val p = kexpresso {
  *     startOfText()
- *     capitalLetter()
+ *     uppercaseLetter()
  *     oneOrMore { letter() }
  *     endOfText()
  * }
@@ -330,9 +330,15 @@ class KexpressoBuilder {
 
     /**
      * Alias for [whitespace]; matches any whitespace character (`\s`).
-     * Kept for backward compatibility.
+     *
+     * @suppress
      */
-    fun space(): KexpressoBuilder = add(Token("\\s", "whitespace"))
+    @Deprecated(
+        message = "Use whitespace() instead; space() will be removed in 1.0.",
+        replaceWith = ReplaceWith("whitespace()"),
+        level = DeprecationLevel.WARNING,
+    )
+    fun space(): KexpressoBuilder = whitespace()
 
     /** Matches any non-whitespace character (`\S`). */
     fun nonWhitespace(): KexpressoBuilder = add(Token("\\S", "a non-whitespace character"))
@@ -350,7 +356,20 @@ class KexpressoBuilder {
     fun letter(): KexpressoBuilder = add(Token("[a-zA-Z]", "a letter"))
 
     /** Matches any ASCII uppercase letter `[A-Z]`. */
-    fun capitalLetter(): KexpressoBuilder = add(Token("[A-Z]", "an uppercase letter"))
+    fun uppercaseLetter(): KexpressoBuilder = add(Token("[A-Z]", "an uppercase letter"))
+
+    /**
+     * Alias for [uppercaseLetter]; matches any ASCII uppercase letter `[A-Z]`.
+     *
+     * @suppress
+     */
+    @Deprecated(
+        message = "Use uppercaseLetter() instead — symmetric with lowercaseLetter(). " +
+            "capitalLetter() will be removed in 1.0.",
+        replaceWith = ReplaceWith("uppercaseLetter()"),
+        level = DeprecationLevel.WARNING,
+    )
+    fun capitalLetter(): KexpressoBuilder = uppercaseLetter()
 
     /** Matches any sentence-ending punctuation `[.!?]`. */
     fun endPunctuation(): KexpressoBuilder = add(Token("[.!?]", "sentence-ending punctuation"))

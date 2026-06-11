@@ -16,6 +16,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   freeze: best-effort APIs (domain helpers, `examples()`, reverse engineering, the ReDoS
   analyzer, natural-language helpers) will be progressively marked experimental so callers
   know which parts of the surface are still allowed to evolve before the SemVer 1.0 commit.
+- `uppercaseLetter()` — canonical name for the `[A-Z]` primitive, symmetric with
+  `lowercaseLetter()`.
+- `handle()` — canonical name for the `[a-zA-Z0-9_-]+` text helper (usernames, slugs).
+
+### Deprecated
+
+Pre-1.0 API polish (see `docs/API_REVIEW.md`). The deprecated names keep working
+identically (each delegates to its replacement) and emit a compiler warning with a
+`ReplaceWith` quick-fix; they will be **removed in 1.0**:
+
+- `capitalLetter()` → use `uppercaseLetter()`.
+- `pseudo()` → use `handle()`.
+- `space()` → use `whitespace()` (was already documented as a backward-compat alias).
+
+`toKexpressoCode()` now emits `uppercaseLetter()` for `[A-Z]`, and the internal
+`sentence()`/`paragraph()` helpers no longer call deprecated names.
 
 ---
 

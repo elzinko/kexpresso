@@ -352,8 +352,8 @@ class CommonPortableTest {
         assertAllMatch(pattern { letter() })
 
     @Test
-    fun examplesCapitalLetterFollowedByLettersMatchesPattern() =
-        assertAllMatch(kexpresso { capitalLetter(); oneOrMore { letter() } })
+    fun examplesUppercaseLetterFollowedByLettersMatchesPattern() =
+        assertAllMatch(kexpresso { uppercaseLetter(); oneOrMore { letter() } })
 
     @Test
     fun examplesExactlyFourDigitsMatchesPattern() =

@@ -9,9 +9,9 @@ package kexpresso
  * Example match: `"Espresso is perfect!"`
  */
 fun KexpressoBuilder.sentence(): KexpressoBuilder {
-    capitalLetter()
+    uppercaseLetter()
     word()
-    zeroOrMore { space(); word() }
+    zeroOrMore { whitespace(); word() }
     endPunctuation()
     return this
 }
@@ -23,6 +23,6 @@ fun KexpressoBuilder.sentence(): KexpressoBuilder {
  */
 fun KexpressoBuilder.paragraph(): KexpressoBuilder {
     sentence()
-    zeroOrMore { space(); sentence() }
+    zeroOrMore { whitespace(); sentence() }
     return this
 }

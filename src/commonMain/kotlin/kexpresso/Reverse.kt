@@ -99,7 +99,7 @@ internal object KexpressoCodeGenerator {
         "\\W" to "nonWordChar()",
         "." to "anyChar()",
         "[a-zA-Z]" to "letter()",
-        "[A-Z]" to "capitalLetter()",
+        "[A-Z]" to "uppercaseLetter()",
         "[a-z]" to "lowercaseLetter()",
         "[a-zA-Z0-9]" to "alphanumeric()",
         "[.!?]" to "endPunctuation()",
@@ -462,7 +462,7 @@ internal class RegexParser(private val src: String) {
 
     /**
      * Parses a `[...]` character class. A handful of well-known classes map to a friendly [Token]
-     * (so codegen yields `letter()`, `capitalLetter()`, etc.); every other class becomes a
+     * (so codegen yields `letter()`, `uppercaseLetter()`, etc.); every other class becomes a
      * [Token] whose regex is the verbatim class — which codegen honestly renders as `raw("[…]")`.
      */
     private fun parseCharClass(): RegexNode {

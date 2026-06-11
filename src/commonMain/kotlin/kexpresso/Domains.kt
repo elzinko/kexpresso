@@ -46,7 +46,7 @@ fun KexpressoBuilder.uuid(): KexpressoBuilder =
  *
  * **Caveats:**
  * - Uppercase letters do NOT match; slugs must be fully lowercase.
- * - Does not allow underscores (use `pseudo()` for that).
+ * - Does not allow underscores (use `handle()` for that).
  */
 fun KexpressoBuilder.slug(): KexpressoBuilder =
     append("[a-z0-9]+(?:-[a-z0-9]+)*")

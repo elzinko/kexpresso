@@ -342,7 +342,7 @@ class ReverseTest {
             """
             |kexpresso {
             |    lowercaseLetter()
-            |    capitalLetter()
+            |    uppercaseLetter()
             |    alphanumeric()
             |    endPunctuation()
             |}

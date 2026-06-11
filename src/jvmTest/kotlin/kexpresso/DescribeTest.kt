@@ -22,7 +22,7 @@ class DescribeTest {
 
     @Test
     fun `describe primitive plus zero-or-more`() {
-        val p = kexpresso { capitalLetter(); zeroOrMore { letter() } }
+        val p = kexpresso { uppercaseLetter(); zeroOrMore { letter() } }
         assertEquals("an uppercase letter, zero or more of (a letter)", p.describe())
     }
 

@@ -79,7 +79,8 @@ class KexpressoBuilderTest {
     }
 
     @Test
-    fun `space is alias for whitespace`() {
+    @Suppress("DEPRECATION")
+    fun `space is deprecated alias for whitespace`() {
         val pw = pattern { whitespace() }
         val ps = pattern { space() }
         assertEquals(pw.source, ps.source)
@@ -125,8 +126,8 @@ class KexpressoBuilderTest {
     }
 
     @Test
-    fun `capitalLetter matches uppercase only`() {
-        val p = pattern { capitalLetter() }
+    fun `uppercaseLetter matches uppercase only`() {
+        val p = pattern { uppercaseLetter() }
         assertTrue(p.matches("A"))
         assertTrue(p.matches("Z"))
         assertFalse(p.matches("a"))
