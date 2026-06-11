@@ -36,6 +36,7 @@ package kexpresso
  * @throws IllegalArgumentException if [regex] is not a valid regular expression (on the JVM this
  *   is the more specific `java.util.regex.PatternSyntaxException`, which is a subtype).
  */
+@ExperimentalKexpressoApi
 fun Kexpresso.from(regex: String): KexpressoPattern {
     // Compile verbatim — this is the source of truth for matching and may throw on invalid input.
     val compiled = Regex(regex)
@@ -65,6 +66,7 @@ fun Kexpresso.from(regex: String): KexpressoPattern {
  *
  * @return the generated kexpresso DSL source.
  */
+@ExperimentalKexpressoApi
 fun KexpressoPattern.toKexpressoCode(): String {
     val bodyLines = KexpressoCodeGenerator.render(ast)
     val indented = bodyLines.joinToString("") { "${KexpressoCodeGenerator.INDENT_UNIT}$it\n" }

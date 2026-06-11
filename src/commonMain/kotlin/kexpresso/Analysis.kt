@@ -6,6 +6,7 @@ package kexpresso
  * Currently only [WARNING] is defined; additional levels may be added in future releases
  * without breaking binary compatibility.
  */
+@ExperimentalKexpressoApi
 enum class ReDoSSeverity {
     /** A potential catastrophic-backtracking shape was detected (heuristic, not a proof). */
     WARNING,
@@ -19,6 +20,7 @@ enum class ReDoSSeverity {
  * @property index    Position in [KexpressoPattern.source] where the risky group starts.
  * @property severity Always [ReDoSSeverity.WARNING] today; reserved for finer-grained levels.
  */
+@ExperimentalKexpressoApi
 data class ReDoSFinding(
     val message: String,
     val index: Int,
@@ -34,6 +36,7 @@ data class ReDoSFinding(
  *
  * @property findings All detected findings; empty when no risky constructs were found.
  */
+@ExperimentalKexpressoApi
 data class ReDoSReport(
     val findings: List<ReDoSFinding>,
 ) {
@@ -68,6 +71,7 @@ data class ReDoSReport(
  *
  * @return a [ReDoSReport] containing zero or more [ReDoSFinding]s.
  */
+@ExperimentalKexpressoApi
 fun KexpressoPattern.analyze(): ReDoSReport {
     val findings = mutableListOf<ReDoSFinding>()
     ReDoSScanner(source).scanForNestedUnbounded(findings)
@@ -79,6 +83,7 @@ fun KexpressoPattern.analyze(): ReDoSReport {
  *
  * See [analyze] for important caveats about what this property does — and does not — guarantee.
  */
+@ExperimentalKexpressoApi
 val KexpressoPattern.isPotentiallyVulnerable: Boolean get() = analyze().isPotentiallyVulnerable
 
 // ── Internal scanner ──────────────────────────────────────────────────────────
@@ -112,6 +117,7 @@ private data class GroupOpen(val bodyStart: Int, val isSafe: Boolean)
  * - All helper functions operate on an arbitrary string [s] at a given position, so the
  *   same logic works for both the top-level scan and recursive body scans.
  */
+@ExperimentalKexpressoApi
 @Suppress("TooManyFunctions")
 private class ReDoSScanner(private val source: String) {
 

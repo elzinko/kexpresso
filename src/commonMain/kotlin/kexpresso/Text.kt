@@ -11,6 +11,7 @@ package kexpresso
  * includes the underscore `_`). Use [handle] for one-or-more `[a-zA-Z0-9_-]+` (the
  * username/slug shape).
  */
+@ExperimentalKexpressoApi
 fun KexpressoBuilder.word(): KexpressoBuilder = append("[a-zA-Z0-9]+")
 
 /**
@@ -19,6 +20,7 @@ fun KexpressoBuilder.word(): KexpressoBuilder = append("[a-zA-Z0-9]+")
  * Like [word] but also allows underscores and hyphens. Covers GitHub/Twitter
  * usernames and URL slugs such as `cold-brew_2024`, `octo-cat`, `barista_42`.
  */
+@ExperimentalKexpressoApi
 fun KexpressoBuilder.handle(): KexpressoBuilder = append("[a-zA-Z0-9_-]+")
 
 /**
@@ -32,6 +34,7 @@ fun KexpressoBuilder.handle(): KexpressoBuilder = append("[a-zA-Z0-9_-]+")
     replaceWith = ReplaceWith("handle()"),
     level = DeprecationLevel.WARNING,
 )
+@ExperimentalKexpressoApi
 fun KexpressoBuilder.pseudo(): KexpressoBuilder = handle()
 
 /**
@@ -40,6 +43,7 @@ fun KexpressoBuilder.pseudo(): KexpressoBuilder = handle()
  * The pattern covers most common address forms, e.g. `barista@coffee.shop`.
  * It is intentionally permissive and not RFC-5321-complete.
  */
+@ExperimentalKexpressoApi
 fun KexpressoBuilder.email(): KexpressoBuilder =
     append("[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}")
 
@@ -49,5 +53,6 @@ fun KexpressoBuilder.email(): KexpressoBuilder =
  * Covers the common `https://example.com/path?query` form.
  * Very long or exotic URLs may not match.
  */
+@ExperimentalKexpressoApi
 fun KexpressoBuilder.url(): KexpressoBuilder =
     append("https?://[^\\s/\$.?#].[^\\s]*")

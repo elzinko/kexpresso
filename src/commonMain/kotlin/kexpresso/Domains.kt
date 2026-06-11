@@ -12,6 +12,7 @@ package kexpresso
  * - Does NOT validate CIDR notation (e.g. `192.168.1.0/24` will not match fully).
  * - Does NOT cover IPv6.
  */
+@ExperimentalKexpressoApi
 fun KexpressoBuilder.ipv4(): KexpressoBuilder =
     append(
         "(?:(?:25[0-5]|2[0-4]\\d|1\\d{2}|[1-9]\\d|\\d)\\.){3}" +
@@ -30,6 +31,7 @@ fun KexpressoBuilder.ipv4(): KexpressoBuilder =
  *   validated, but the rest of the structure is not semantically validated.
  * - Version 0 (nil UUID `00000000-…`) and version 6+ do not match.
  */
+@ExperimentalKexpressoApi
 fun KexpressoBuilder.uuid(): KexpressoBuilder =
     append(
         "[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}" +
@@ -48,6 +50,7 @@ fun KexpressoBuilder.uuid(): KexpressoBuilder =
  * - Uppercase letters do NOT match; slugs must be fully lowercase.
  * - Does not allow underscores (use `handle()` for that).
  */
+@ExperimentalKexpressoApi
 fun KexpressoBuilder.slug(): KexpressoBuilder =
     append("[a-z0-9]+(?:-[a-z0-9]+)*")
 
@@ -66,6 +69,7 @@ fun KexpressoBuilder.slug(): KexpressoBuilder =
  * - Case-insensitive hex digits — both `#FFF` and `#fff` match.
  * - 5- or 7-digit forms do not match (they are invalid CSS).
  */
+@ExperimentalKexpressoApi
 fun KexpressoBuilder.hexColor(): KexpressoBuilder =
     append("#(?:[0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})")
 
@@ -82,6 +86,7 @@ fun KexpressoBuilder.hexColor(): KexpressoBuilder =
  * - Partial forms like `"1.0"` do NOT match.
  * - Leading zeros in numeric parts (e.g. `01.0.0`) do NOT match.
  */
+@ExperimentalKexpressoApi
 fun KexpressoBuilder.semanticVersion(): KexpressoBuilder =
     append(
         "(?:0|[1-9]\\d*)\\.(?:0|[1-9]\\d*)\\.(?:0|[1-9]\\d*)" +
@@ -102,6 +107,7 @@ fun KexpressoBuilder.semanticVersion(): KexpressoBuilder =
  * - Does NOT accept other ISO-8601 date representations (e.g. ordinal `2024-032`
  *   or week-based `2024-W05-1`).
  */
+@ExperimentalKexpressoApi
 fun KexpressoBuilder.isoDate(): KexpressoBuilder =
     append("\\d{4}-(?:0[1-9]|1[0-2])-(?:0[1-9]|[12]\\d|3[01])")
 
@@ -118,6 +124,7 @@ fun KexpressoBuilder.isoDate(): KexpressoBuilder =
  * - Timezone offset is validated for hour range (`00`–`23`) and minute range (`00`–`59`),
  *   but exotic offsets like `+14:00` (which are valid for Pacific island nations) also match.
  */
+@ExperimentalKexpressoApi
 fun KexpressoBuilder.isoTime(): KexpressoBuilder =
     append(
         "(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d)?" +
@@ -135,6 +142,7 @@ fun KexpressoBuilder.isoTime(): KexpressoBuilder =
  * - Leading zeros are not allowed (e.g. `007` does not match as a single token).
  * - There is no upper bound on the number of digits.
  */
+@ExperimentalKexpressoApi
 fun KexpressoBuilder.integerNumber(): KexpressoBuilder =
     append("[+-]?(?:0|[1-9]\\d*)")
 
@@ -151,6 +159,7 @@ fun KexpressoBuilder.integerNumber(): KexpressoBuilder =
  *   digit before the decimal point.
  * - Scientific notation (e.g. `1e10`) is not supported.
  */
+@ExperimentalKexpressoApi
 fun KexpressoBuilder.decimalNumber(): KexpressoBuilder =
     append("[+-]?(?:0|[1-9]\\d*)(?:\\.\\d+)?")
 
@@ -166,6 +175,7 @@ fun KexpressoBuilder.decimalNumber(): KexpressoBuilder =
  * - The first character after `#` must be a letter (not a digit), so `#42` does not match.
  * - Unicode letters/emoji are not supported.
  */
+@ExperimentalKexpressoApi
 fun KexpressoBuilder.hashtag(): KexpressoBuilder =
     append("#[a-zA-Z]\\w*")
 
@@ -181,6 +191,7 @@ fun KexpressoBuilder.hashtag(): KexpressoBuilder =
  *   GitHub, etc.) have different limits.
  * - Unicode characters and hyphens are not accepted.
  */
+@ExperimentalKexpressoApi
 fun KexpressoBuilder.mention(): KexpressoBuilder =
     append("@[a-zA-Z0-9_]{1,50}")
 
@@ -198,6 +209,7 @@ fun KexpressoBuilder.mention(): KexpressoBuilder =
  * - The pattern does not validate country codes or subscriber number length rules,
  *   only the overall length constraint of 7–15 digits.
  */
+@ExperimentalKexpressoApi
 fun KexpressoBuilder.e164Phone(): KexpressoBuilder =
     append("\\+[1-9]\\d{6,14}")
 
@@ -219,6 +231,7 @@ fun KexpressoBuilder.e164Phone(): KexpressoBuilder =
  *   over-specified forms like `"1:2:3:4:5:6:7::8"` may not match as intended.
  * - For a plain IPv4 address, use [ipv4] instead.
  */
+@ExperimentalKexpressoApi
 fun KexpressoBuilder.ipv6(): KexpressoBuilder =
     // The branches are wrapped in a non-capturing group so the helper composes correctly with
     // surrounding tokens (otherwise the bare `|` would bind only the first/last branch).
@@ -251,6 +264,7 @@ fun KexpressoBuilder.ipv6(): KexpressoBuilder =
  * - Dot-separated form (used by Cisco, e.g. `0123.4567.89ab`) does **not** match.
  * - Mixed separators (e.g. `01:23-45:67-89:AB`) do **not** match.
  */
+@ExperimentalKexpressoApi
 fun KexpressoBuilder.macAddress(): KexpressoBuilder =
     // Wrapped in a non-capturing group so the two separator branches compose correctly with
     // surrounding tokens (a bare `|` would let adjacent tokens bind to only one branch).
@@ -276,6 +290,7 @@ fun KexpressoBuilder.macAddress(): KexpressoBuilder =
  * - URL-safe Base64 characters (`-` and `_` instead of `+` and `/`) do **not** match —
  *   for that, use [jwt] which uses the base64url alphabet.
  */
+@ExperimentalKexpressoApi
 fun KexpressoBuilder.base64(): KexpressoBuilder =
     // Trailing group accepts a final 2- or 3-char chunk with OR without padding, so both padded
     // (`YQ==`, `TWE=`) and unpadded (`YQ`, `TWE`) Base64 are matched, as the docs advertise.
@@ -300,5 +315,6 @@ fun KexpressoBuilder.base64(): KexpressoBuilder =
  * - Standard Base64 characters `+` and `/` are not part of the base64url alphabet and
  *   do **not** match here.
  */
+@ExperimentalKexpressoApi
 fun KexpressoBuilder.jwt(): KexpressoBuilder =
     append("[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+")

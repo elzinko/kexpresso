@@ -13,6 +13,7 @@ package kexpresso
  * @param block builder block that assembles the pattern.
  * @return a compiled [KexpressoPattern].
  */
+@OptIn(ExperimentalKexpressoApi::class)
 fun kexpresso(vararg options: RegexOption, block: KexpressoBuilder.() -> Unit): KexpressoPattern {
     val builder = KexpressoBuilder()
     builder.block()
@@ -36,6 +37,7 @@ object Kexpresso {
      * @param block builder block that assembles the pattern.
      * @return a compiled [KexpressoPattern].
      */
+    @OptIn(ExperimentalKexpressoApi::class)
     fun pattern(vararg options: RegexOption, block: KexpressoBuilder.() -> Unit): KexpressoPattern {
         val builder = KexpressoBuilder()
         builder.block()
@@ -71,6 +73,7 @@ class KexpressoPattern internal constructor(
      * @param source the raw regex string.
      * @param regex the compiled [Regex].
      */
+    @ExperimentalKexpressoApi
     constructor(source: String, regex: Regex) : this(source, regex, Raw(source))
 
     /** The set of [RegexOption]s used when compiling this pattern. */
@@ -295,6 +298,7 @@ class KexpressoBuilder {
      *
      * @param options optional [RegexOption]s applied to the resulting regex.
      */
+    @ExperimentalKexpressoApi
     fun build(vararg options: RegexOption): KexpressoPattern {
         val root = SequenceNode(nodes.toList())
         val source = root.render()

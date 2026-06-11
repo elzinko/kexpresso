@@ -4,6 +4,8 @@ import kotlin.test.Test
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
+@OptIn(ExperimentalKexpressoApi::class)
+
 /**
  * Tests for writing-domain helpers defined in [Writing.kt].
  */
