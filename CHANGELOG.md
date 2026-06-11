@@ -12,6 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - README install snippets now show the current release version (`0.8.0`) and are kept in sync automatically via the `sync-readme-version` workflow on every future release.
+- `@ExperimentalKexpressoApi` opt-in marker annotation. Foundation for the upcoming 1.0
+  freeze: best-effort APIs (domain helpers, `examples()`, reverse engineering, the ReDoS
+  analyzer, natural-language helpers) will be progressively marked experimental so callers
+  know which parts of the surface are still allowed to evolve before the SemVer 1.0 commit.
 
 ---
 
