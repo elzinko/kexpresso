@@ -7,11 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [Unreleased]
+## [0.9.0] - 2026-06-11
+
+**API freeze candidate.** This release draws the line the 1.0 stability commitment will
+be made on (see `docs/API_REVIEW.md`): the stable core is final-shaped, best-effort
+features are explicitly marked experimental, and the names being removed in 1.0 are
+deprecated with quick-fixes. Migrate off the deprecated names now and 1.0 will be a
+no-op upgrade.
 
 ### Added
 
-- README install snippets now show the current release version (`0.8.0`) and are kept in sync automatically via the `sync-readme-version` workflow on every future release.
+- README install snippets now show the current release version and are kept in sync automatically via the `sync-readme-version` workflow on every future release.
 - `@ExperimentalKexpressoApi` opt-in marker annotation. Foundation for the upcoming 1.0
   freeze: best-effort APIs (domain helpers, `examples()`, reverse engineering, the ReDoS
   analyzer, natural-language helpers) will be progressively marked experimental so callers
