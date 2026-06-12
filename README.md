@@ -47,6 +47,8 @@ strictEmail.matches("barista@coffee.shop") // true
 strictEmail.matches("not an email")        // false
 ```
 
+> **Two equivalent entry points** — `kexpresso { }` (top-level function) and `Kexpresso.pattern { }` (object-oriented style) produce the same `KexpressoPattern`. See [Object-oriented entry point](#object-oriented-entry-point) below.
+
 Benefits at a glance:
 
 - **Readable** — the DSL reads top-to-bottom like a description of what you want to match.
