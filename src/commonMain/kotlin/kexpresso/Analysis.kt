@@ -58,7 +58,7 @@ data class ReDoSReport(
  *
  * Examples flagged: `(?:a+)+`, `(a*)*`, `(?:\w+)+`, `(?:(?:x)+)*`, `(.+)+`.
  *
- * **Limitations (be honest about them):**
+ * **Limitations:**
  * - This is a syntactic heuristic on the source string; it does not prove vulnerability.
  * - It does not detect alternation-based or polynomial-backtracking ReDoS patterns.
  * - Detection centres on a group that itself carries an unbounded quantifier; a risky
@@ -241,7 +241,7 @@ private class ReDoSScanner(private val source: String) {
      * Returns `null` if there is no quantifier at [pos].
      *
      * Possessive suffixes (`*+`, `++`) are recognised as bounded (non-backtracking) so they
-     * do NOT contribute to a ReDoS finding.  Lazy suffixes (`*?`, `+?`) remain unbounded.
+     * do NOT contribute to a ReDoS finding. Lazy suffixes (`*?`, `+?`) remain unbounded.
      */
     private fun readQuantifier(s: String, pos: Int): QuantifierInfo? {
         if (pos >= s.length) return null

@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [Unreleased]
+
+### Added
+
+- Builder arguments are now validated at the call site with clear error messages instead
+  of failing later with an obscure regex syntax error: `exactly`/`atLeast` reject negative
+  counts, `between` rejects reversed bounds, `inRange` rejects reversed character bounds,
+  `anyOf`/`noneOf` reject an empty character set, and `oneOf` requires at least one
+  alternative. (`noneOf("")` previously compiled on JS — where `[^]` means *any* character —
+  but crashed on the JVM; it is now rejected everywhere.)
+
+### Changed
+
+- `Kexpresso.pattern { }` now delegates to `kexpresso { }` instead of duplicating it.
+- `replaceFirst`/`replaceAll` no longer copy the input `CharSequence` to a `String` before
+  delegating to `Regex`.
+
+### Fixed
+
+- Removed a stray NUL control character embedded in a `Reverse.kt` comment.
+- README primitives table: `literal(text)` documented its output as `\Qtext\E`; the actual
+  output is per-character escaping (e.g. `a\.b`) since 0.5.0.
+- CONTRIBUTING referenced the removed JaCoCo setup; coverage commands and report paths now
+  point to Kover.
+- Changelog version links: added the missing `0.9.0` entry and re-pointed `Unreleased`.
+
 ## [0.9.0] - 2026-06-11
 
 **API freeze candidate.** This release draws the line the 1.0 stability commitment will
@@ -363,7 +389,8 @@ identically (each delegates to its replacement) and emit a compiler warning with
 - **Detekt** — static analysis configuration at `config/detekt/detekt.yml`.
 - **JaCoCo** — test coverage reporting.
 
-[Unreleased]: https://github.com/elzinko/kexpresso/compare/v0.8.0...HEAD
+[Unreleased]: https://github.com/elzinko/kexpresso/compare/v0.9.0...HEAD
+[0.9.0]: https://github.com/elzinko/kexpresso/compare/v0.8.0...v0.9.0
 [0.8.0]: https://github.com/elzinko/kexpresso/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/elzinko/kexpresso/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/elzinko/kexpresso/compare/v0.5.0...v0.6.0

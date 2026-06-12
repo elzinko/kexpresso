@@ -29,9 +29,7 @@ class AnalysisTest {
         return builder.build()
     }
 
-    // =========================================================================
-    // TRUE POSITIVES — these patterns MUST be flagged
-    // =========================================================================
+    // ── TRUE POSITIVES — these patterns MUST be flagged ─────────────────────
 
     @Test
     fun `non-capturing group with plus inside plus is flagged at index 0`() {
@@ -136,9 +134,7 @@ class AnalysisTest {
         assertEquals(7, report.findings[1].index)
     }
 
-    // =========================================================================
-    // FALSE-POSITIVE GUARDS — these patterns MUST NOT be flagged
-    // =========================================================================
+    // ── FALSE-POSITIVE GUARDS — these patterns MUST NOT be flagged ──────────
 
     @Test
     fun `quantifier chars inside character class are not flagged`() {
@@ -252,9 +248,7 @@ class AnalysisTest {
         )
     }
 
-    // =========================================================================
-    // ReDoSReport API contract
-    // =========================================================================
+    // ── ReDoSReport API contract ────────────────────────────────────────────
 
     @Test
     fun `isPotentiallyVulnerable is false on empty findings`() {
@@ -283,9 +277,7 @@ class AnalysisTest {
         assertEquals(risky.analyze().isPotentiallyVulnerable, risky.isPotentiallyVulnerable)
     }
 
-    // =========================================================================
-    // Coverage-completeness tests — exercise remaining branches
-    // =========================================================================
+    // ── Coverage-completeness tests — exercise remaining branches ───────────
 
     @Test
     fun `named capturing group with inner unbounded outer unbounded is flagged`() {

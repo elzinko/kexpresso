@@ -301,7 +301,7 @@ sentencePattern.matches("No punctuation at the end")  // false
 
 | Method | Regex produced | Notes |
 |---|---|---|
-| `literal(text)` | `\Qtext\E` | Escapes all regex metacharacters |
+| `literal(text)` | escaped text (e.g. `a\.b`) | Escapes each regex metacharacter |
 | `char(c)` | escaped char | Escapes metacharacters |
 | `digit()` | `\d` | Decimal digit 0–9 |
 | `nonDigit()` | `\D` | Any non-digit |
