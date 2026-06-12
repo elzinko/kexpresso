@@ -11,6 +11,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `docs/ARCHITECTURE.md` — a contributor-facing map of the codebase: file roles, the AST
+  at the core of the design, the `Raw`-node limitation, multiplatform constraints, and
+  the touchpoint checklist for adding a new primitive. Linked from README and
+  CONTRIBUTING.
+
 - Builder arguments are now validated at the call site with clear error messages instead
   of failing later with an obscure regex syntax error: `exactly`/`atLeast` reject negative
   counts, `between` rejects reversed bounds, `inRange` rejects reversed character bounds,

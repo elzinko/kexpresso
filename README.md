@@ -858,7 +858,7 @@ code stays compilable and never changes match behaviour. An invalid regex throws
 ## Building and contributing
 
 ```bash
-# Compile, run all tests, Detekt static analysis, and JaCoCo coverage report
+# Compile, run all tests, Detekt static analysis, and the Kover coverage check
 ./gradlew build
 
 # Run tests only
@@ -869,7 +869,8 @@ code stays compilable and never changes match behaviour. An invalid regex throws
 ```
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for the full contributor guide — including how to
-add a new DSL primitive.
+add a new DSL primitive — and [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for a map of
+how the codebase fits together.
 
 ---
 
