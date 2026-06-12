@@ -3,6 +3,9 @@
 Thank you for helping improve Kexpresso! This guide covers everything you need to go from
 zero to a merged pull request.
 
+New to the codebase? Start with [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — a short
+map of the files, the AST at the core of the design, and where to start reading.
+
 ---
 
 ## Prerequisites
@@ -87,7 +90,11 @@ Every PR must have:
 
 ## Adding a new DSL primitive (TDD workflow)
 
-Follow these steps when adding a method to `KexpressoBuilder` (or a new extension file):
+Follow these steps when adding a method to `KexpressoBuilder` (or a new extension file).
+A primitive touches more files than you might expect (codegen and example-generation
+lookup tables) — see the
+[touchpoint checklist in ARCHITECTURE.md](docs/ARCHITECTURE.md#adding-a-new-primitive)
+for the complete list.
 
 ### 1. Write a failing test
 
