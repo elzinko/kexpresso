@@ -20,7 +20,7 @@ build tooling automatically on first run.
 ## Building locally
 
 ```bash
-# Full build: compile + tests + Detekt static analysis + JaCoCo coverage report
+# Full build: compile + tests + Detekt static analysis + Kover coverage check
 ./gradlew build
 
 # Tests only
@@ -29,8 +29,8 @@ build tooling automatically on first run.
 # Detekt static analysis only
 ./gradlew detekt
 
-# JaCoCo coverage report (written to build/reports/jacoco/)
-./gradlew jacocoTestReport
+# Kover coverage report (written to build/reports/kover/)
+./gradlew koverHtmlReport
 ```
 
 All three checks — tests, Detekt, and coverage — must pass before a pull request will be
@@ -49,7 +49,7 @@ Key points:
 - 4-space indentation, no tabs.
 - Keep functions small and focused.
 - Every public API member needs a KDoc comment (see existing methods in
-  `src/main/kotlin/kexpresso/` for style examples).
+  `src/commonMain/kotlin/kexpresso/` for style examples).
 
 ---
 
@@ -77,7 +77,7 @@ chore: bump Kotlin to 1.9.0
 ### CI requirements
 
 Every PR must have:
-- Green CI build (tests + Detekt + JaCoCo).
+- Green CI build (tests + Detekt + Kover).
 - Code coverage maintained or improved (do not lower the threshold).
 - Tests for every new or changed DSL method.
 - Updated KDoc on every public API addition.
@@ -92,7 +92,8 @@ Follow these steps when adding a method to `KexpressoBuilder` (or a new extensio
 ### 1. Write a failing test
 
 Add a test class or test function in the appropriate file under
-`src/test/kotlin/kexpresso/`. Name the test descriptively:
+`src/commonTest/kotlin/kexpresso/` (portable behaviour) or
+`src/jvmTest/kotlin/kexpresso/` (JVM-specific). Name the test descriptively:
 
 ```kotlin
 @Test
@@ -108,27 +109,19 @@ Run `./gradlew test` — the test must fail at this point.
 ### 2. Implement on `KexpressoBuilder` (or as an extension)
 
 - **Core primitive** — add the method to `KexpressoBuilder` in
-  `src/main/kotlin/kexpresso/Kexpresso.kt`.
+  `src/commonMain/kotlin/kexpresso/Kexpresso.kt`, backed by an AST node from `Ast.kt`
+  (see `followedBy` and the other lookarounds for the pattern to follow).
 - **Domain helper** — add a Kotlin extension function in the relevant file
-  (`Text.kt`, `Writing.kt`) or create a new file following the same naming pattern.
-
-```kotlin
-/**
- * Appends a positive lookahead assertion (`(?=...)`).
- *
- * @param block the pattern that must appear immediately after the current position.
- */
-fun lookahead(block: KexpressoBuilder.() -> Unit): KexpressoBuilder {
-    return append("(?=${renderBlock(block)})")
-}
-```
+  (`Text.kt`, `Writing.kt`, `Domains.kt`) or create a new file following the same
+  naming pattern; helpers emit their regex via the internal `append(...)` shim.
 
 ### 3. Write the KDoc
 
 Every public method must have a KDoc comment that includes:
 - A one-line summary.
 - `@param` tags for each parameter.
-- At least one example in the form `// produces \Q...\E` or a usage snippet.
+- At least one example showing the regex produced (e.g. `// produces (?=...)`) or a
+  usage snippet.
 
 ### 4. Verify the full build is green
 

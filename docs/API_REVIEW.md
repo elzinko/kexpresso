@@ -1,6 +1,10 @@
 # API Surface Review — pre-1.0 freeze
 
-> **Status**: review draft generated 2026-06-10
+> **Status**: review of 2026-06-10, kept as a historical record. All recommended actions
+> shipped in v0.9.0: `space()`, `capitalLetter()`, and `pseudo()` are deprecated (replaced
+> by `whitespace()`, `uppercaseLetter()`, and `handle()`), `Writing.kt` no longer calls
+> deprecated names, and every 🟡 symbol is marked `@ExperimentalKexpressoApi`. The 🔴/🟡
+> notes below describe the pre-0.9.0 state.
 > **Goal**: classify every public symbol so we know what is safe to freeze in 1.0,
 > what should be opt-in `@ExperimentalKexpressoApi`, what should become `internal`,
 > and what should be renamed/refactored before the freeze.

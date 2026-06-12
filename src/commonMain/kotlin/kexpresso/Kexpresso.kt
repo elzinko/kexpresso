@@ -33,16 +33,14 @@ object Kexpresso {
     /**
      * Builds a [KexpressoPattern] using the supplied [block].
      *
+     * Identical to the top-level [kexpresso] function, to which it delegates.
+     *
      * @param options optional [RegexOption]s applied to the compiled regex.
      * @param block builder block that assembles the pattern.
      * @return a compiled [KexpressoPattern].
      */
-    @OptIn(ExperimentalKexpressoApi::class)
-    fun pattern(vararg options: RegexOption, block: KexpressoBuilder.() -> Unit): KexpressoPattern {
-        val builder = KexpressoBuilder()
-        builder.block()
-        return builder.build(*options)
-    }
+    fun pattern(vararg options: RegexOption, block: KexpressoBuilder.() -> Unit): KexpressoPattern =
+        kexpresso(*options, block = block)
 }
 
 /**
@@ -146,7 +144,7 @@ class KexpressoPattern internal constructor(
      * @return the resulting string with the first match replaced.
      */
     fun replaceFirst(input: CharSequence, replacement: String): String =
-        regex.replaceFirst(input.toString(), replacement)
+        regex.replaceFirst(input, replacement)
 
     /**
      * Replaces all occurrences of this pattern in [input] with [replacement].
@@ -165,7 +163,7 @@ class KexpressoPattern internal constructor(
      * @return the resulting string with all matches replaced.
      */
     fun replaceAll(input: CharSequence, replacement: String): String =
-        regex.replace(input.toString(), replacement)
+        regex.replace(input, replacement)
 
     /**
      * Replaces all occurrences of this pattern in [input] using the [transform] function.
@@ -347,6 +345,15 @@ class KexpressoBuilder {
     /** Matches any non-whitespace character (`\S`). */
     fun nonWhitespace(): KexpressoBuilder = add(Token("\\S", "a non-whitespace character"))
 
+    /** Matches a horizontal tab character (`\t`). */
+    fun tab(): KexpressoBuilder = add(Token("\\t", "a tab"))
+
+    /** Matches a newline character (`\n`). */
+    fun newline(): KexpressoBuilder = add(Token("\\n", "a newline"))
+
+    /** Matches a carriage-return character (`\r`). */
+    fun carriageReturn(): KexpressoBuilder = add(Token("\\r", "a carriage return"))
+
     /** Matches a word character (`\w`). */
     fun wordChar(): KexpressoBuilder = add(Token("\\w", "a word character"))
 
@@ -375,6 +382,12 @@ class KexpressoBuilder {
     )
     fun capitalLetter(): KexpressoBuilder = uppercaseLetter()
 
+    /** Matches any lowercase ASCII letter (`[a-z]`). */
+    fun lowercaseLetter(): KexpressoBuilder = add(Token("[a-z]", "a lowercase letter"))
+
+    /** Matches any ASCII letter or digit (`[a-zA-Z0-9]`). */
+    fun alphanumeric(): KexpressoBuilder = add(Token("[a-zA-Z0-9]", "an alphanumeric character"))
+
     /** Matches any sentence-ending punctuation `[.!?]`. */
     fun endPunctuation(): KexpressoBuilder = add(Token("[.!?]", "sentence-ending punctuation"))
 
@@ -384,37 +397,45 @@ class KexpressoBuilder {
      * Matches any one character in [chars] (`[...]`).
      * Special characters inside the class are escaped appropriately.
      *
-     * @param chars the set of characters to match.
+     * @param chars the set of characters to match. Must not be empty (an empty
+     *   character class is not a valid regex).
+     * @throws IllegalArgumentException if [chars] is empty.
      */
     fun anyOf(chars: String): KexpressoBuilder {
-        val escaped = chars.replace("\\", "\\\\")
-            .replace("]", "\\]")
-            .replace("^", "\\^")
-            .replace("-", "\\-")
-        return add(Token("[$escaped]", "any of \"$chars\""))
+        require(chars.isNotEmpty()) { "anyOf() requires at least one character." }
+        return add(Token("[${escapeForCharClass(chars)}]", "any of \"$chars\""))
     }
 
     /**
      * Matches any one character NOT in [chars] (`[^...]`).
      *
-     * @param chars the set of characters to exclude.
+     * @param chars the set of characters to exclude. Must not be empty (`[^]` is invalid
+     *   on the JVM and means "any character" on JS — refusing it avoids the divergence).
+     * @throws IllegalArgumentException if [chars] is empty.
      */
     fun noneOf(chars: String): KexpressoBuilder {
-        val escaped = chars.replace("\\", "\\\\")
-            .replace("]", "\\]")
-            .replace("^", "\\^")
-            .replace("-", "\\-")
-        return add(Token("[^$escaped]", "none of \"$chars\""))
+        require(chars.isNotEmpty()) { "noneOf() requires at least one character." }
+        return add(Token("[^${escapeForCharClass(chars)}]", "none of \"$chars\""))
     }
+
+    /** Escapes the characters that are special inside a `[...]` character class. */
+    private fun escapeForCharClass(chars: String): String = chars
+        .replace("\\", "\\\\")
+        .replace("]", "\\]")
+        .replace("^", "\\^")
+        .replace("-", "\\-")
 
     /**
      * Matches any character in the range `[from-to]`.
      *
      * @param from the lower bound (inclusive).
-     * @param to the upper bound (inclusive).
+     * @param to the upper bound (inclusive). Must not be less than [from].
+     * @throws IllegalArgumentException if [from] is greater than [to].
      */
-    fun inRange(from: Char, to: Char): KexpressoBuilder =
-        add(Token("[$from-$to]", "a character in range $from-$to"))
+    fun inRange(from: Char, to: Char): KexpressoBuilder {
+        require(from <= to) { "inRange() bounds are reversed: '$from' > '$to'." }
+        return add(Token("[$from-$to]", "a character in range $from-$to"))
+    }
 
     // ── anchors ──────────────────────────────────────────────────────────────
 
@@ -433,25 +454,8 @@ class KexpressoBuilder {
     /** Matches a word boundary (`\b`). */
     fun wordBoundary(): KexpressoBuilder = add(Token("\\b", "a word boundary"))
 
-    // ── completions ──────────────────────────────────────────────────────────
-
     /** Matches a non-word boundary (`\B`). */
     fun nonWordBoundary(): KexpressoBuilder = add(Token("\\B", "a non-word boundary"))
-
-    /** Matches any lowercase ASCII letter (`[a-z]`). */
-    fun lowercaseLetter(): KexpressoBuilder = add(Token("[a-z]", "a lowercase letter"))
-
-    /** Matches any ASCII letter or digit (`[a-zA-Z0-9]`). */
-    fun alphanumeric(): KexpressoBuilder = add(Token("[a-zA-Z0-9]", "an alphanumeric character"))
-
-    /** Matches a horizontal tab character (`\t`). */
-    fun tab(): KexpressoBuilder = add(Token("\\t", "a tab"))
-
-    /** Matches a newline character (`\n`). */
-    fun newline(): KexpressoBuilder = add(Token("\\n", "a newline"))
-
-    /** Matches a carriage-return character (`\r`). */
-    fun carriageReturn(): KexpressoBuilder = add(Token("\\r", "a carriage return"))
 
     // ── quantifiers ──────────────────────────────────────────────────────────
 
@@ -485,37 +489,47 @@ class KexpressoBuilder {
     /**
      * Repeats the [block] pattern exactly [n] times (`(?:...){n}`).
      *
-     * @param n the exact repetition count.
+     * @param n the exact repetition count. Must be >= 0.
      * @param block the pattern to repeat.
+     * @throws IllegalArgumentException if [n] is negative.
      */
-    fun exactly(n: Int, block: KexpressoBuilder.() -> Unit): KexpressoBuilder =
-        add(Quantifier(childNode(block), QuantifierKind.Exactly(n), greedy = true))
+    fun exactly(n: Int, block: KexpressoBuilder.() -> Unit): KexpressoBuilder {
+        require(n >= 0) { "exactly() count must be >= 0, but was $n." }
+        return add(Quantifier(childNode(block), QuantifierKind.Exactly(n), greedy = true))
+    }
 
     /**
      * Repeats the [block] pattern at least [n] times (`(?:...){n,}`).
      *
-     * @param n the minimum repetition count.
+     * @param n the minimum repetition count. Must be >= 0.
      * @param greedy when false, the quantifier is lazy.
      * @param block the pattern to repeat.
+     * @throws IllegalArgumentException if [n] is negative.
      */
-    fun atLeast(n: Int, greedy: Boolean = true, block: KexpressoBuilder.() -> Unit): KexpressoBuilder =
-        add(Quantifier(childNode(block), QuantifierKind.AtLeast(n), greedy))
+    fun atLeast(n: Int, greedy: Boolean = true, block: KexpressoBuilder.() -> Unit): KexpressoBuilder {
+        require(n >= 0) { "atLeast() count must be >= 0, but was $n." }
+        return add(Quantifier(childNode(block), QuantifierKind.AtLeast(n), greedy))
+    }
 
     /**
      * Repeats the [block] pattern between [min] and [max] times (`(?:...){min,max}`).
      *
-     * @param min the minimum repetition count.
-     * @param max the maximum repetition count.
+     * @param min the minimum repetition count. Must be >= 0.
+     * @param max the maximum repetition count. Must not be less than [min].
      * @param greedy when false, the quantifier is lazy.
      * @param block the pattern to repeat.
+     * @throws IllegalArgumentException if [min] is negative or [max] is less than [min].
      */
     fun between(
         min: Int,
         max: Int,
         greedy: Boolean = true,
         block: KexpressoBuilder.() -> Unit,
-    ): KexpressoBuilder =
-        add(Quantifier(childNode(block), QuantifierKind.Between(min, max), greedy))
+    ): KexpressoBuilder {
+        require(min >= 0) { "between() min must be >= 0, but was $min." }
+        require(max >= min) { "between() bounds are reversed: min $min > max $max." }
+        return add(Quantifier(childNode(block), QuantifierKind.Between(min, max), greedy))
+    }
 
     // ── grouping & alternation ────────────────────────────────────────────────
 
@@ -556,10 +570,13 @@ class KexpressoBuilder {
      * Matches any one of the patterns produced by [blocks], joined by `|` and
      * wrapped in a non-capturing group (`(?:a|b|c)`).
      *
-     * @param blocks the alternative patterns.
+     * @param blocks the alternative patterns. At least one is required.
+     * @throws IllegalArgumentException if no alternative is given.
      */
-    fun oneOf(vararg blocks: KexpressoBuilder.() -> Unit): KexpressoBuilder =
-        add(Alternation(blocks.map { childNode(it) }))
+    fun oneOf(vararg blocks: KexpressoBuilder.() -> Unit): KexpressoBuilder {
+        require(blocks.isNotEmpty()) { "oneOf() requires at least one alternative." }
+        return add(Alternation(blocks.map { childNode(it) }))
+    }
 
     // ── lookarounds ──────────────────────────────────────────────────────────
 
@@ -622,8 +639,8 @@ class KexpressoBuilder {
      * ```kotlin
      * // Match digits only when NOT preceded by "$"
      * val p = kexpresso { notPrecededBy { literal("\$") }; oneOrMore { digit() } }
-     * p.find("Qty: 42")       // MatchResult("42")
-     * p.find("Total: \$42")   // null (digits are preceded by "$")
+     * p.find("Qty: 42")?.value // "42"
+     * p.find("Total: \$42")    // null (digits are preceded by "$")
      * ```
      *
      * @param block the pattern that must NOT appear immediately before the current position.

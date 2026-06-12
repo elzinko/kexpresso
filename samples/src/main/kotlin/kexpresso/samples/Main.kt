@@ -91,7 +91,7 @@ fun main() {
     println()
 
     // ── 8. ReDoS analysis ────────────────────────────────────────────────────
-    println("=== 7. ReDoS analysis ===")
+    println("=== 8. ReDoS analysis ===")
     val safePattern  = kexpresso { isoDate() }
     val riskyPattern = kexpresso { oneOrMore { oneOrMore { letter() } } }
 
