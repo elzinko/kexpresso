@@ -50,7 +50,7 @@ internal data class Token(val regex: String, val description: String) : RegexNod
  *
  * The escaping is a hand-written, per-character escaper (rather than `Regex.escape`/`\Q…\E`,
  * which do not exist on Kotlin/JS) so the generated `source` is portable across the JVM
- * (PCRE) and JS (ECMAScript) regex engines. For example `a.b` renders as `a\.b`.
+ * (`java.util.regex`) and JS (ECMAScript) regex engines. For example `a.b` renders as `a\.b`.
  *
  * @property text the plain text to match literally.
  */
@@ -74,7 +74,7 @@ private val LITERAL_META_CHARACTERS: Set<Char> =
 
 /**
  * Backslash-escapes every regex meta-character in [text] so the result matches [text] verbatim
- * on both the JVM (PCRE) and JS (ECMAScript) regex engines.
+ * on both the JVM (`java.util.regex`) and JS (ECMAScript) regex engines.
  *
  * This is a portable, common-source replacement for `Regex.escape()` / `\Q…\E`, which are
  * JVM-only.

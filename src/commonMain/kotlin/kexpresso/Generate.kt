@@ -85,32 +85,18 @@ private fun repeatCount(kind: QuantifierKind, rng: Random): Int = when (kind) {
 
 // ── Token generation ──────────────────────────────────────────────────────────
 
-/** Digits 0-9. */
 private val DIGITS = ('0'..'9').toList()
-
-/** ASCII lowercase letters. */
 private val LOWER = ('a'..'z').toList()
-
-/** ASCII uppercase letters. */
 private val UPPER = ('A'..'Z').toList()
-
-/** ASCII letters (upper + lower). */
 private val LETTERS = LOWER + UPPER
-
-/** ASCII letters + digits. */
 private val ALPHANUMERICS = LETTERS + DIGITS
-
-/** Characters that are NOT digits (a small safe set of ASCII letters). */
-private val NON_DIGIT_CHARS = LETTERS
-
-/** Characters that are NOT word chars (\w = [a-zA-Z0-9_]). */
-private val NON_WORD_CHARS = listOf('!', '@', '#', '%', '&', '-', '+', '=', '?', '/')
-
-/** Characters that are NOT whitespace. */
-private val NON_WS_CHARS = ALPHANUMERICS
-
-/** Sentence-ending punctuation. */
 private val END_PUNCT = listOf('.', '!', '?')
+
+// Safe sampling pools for the negated tokens: any ASCII letter is a non-digit, any
+// alphanumeric is non-whitespace, and none of these symbols belong to \w.
+private val NON_DIGIT_CHARS = LETTERS
+private val NON_WORD_CHARS = listOf('!', '@', '#', '%', '&', '-', '+', '=', '?', '/')
+private val NON_WS_CHARS = ALPHANUMERICS
 
 /**
  * Maps a known [Token.regex] string to a generator that produces one matching character/string.

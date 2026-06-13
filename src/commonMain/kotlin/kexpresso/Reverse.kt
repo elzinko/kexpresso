@@ -540,7 +540,11 @@ internal class RegexParser(private val src: String) {
 
     // ── helpers ───────────────────────────────────────────────────────────────
 
-    /** Current character, or NUL (` `) when at end-of-input — a sentinel no regex atom uses. */
+    /**
+     * Current character, or a space sentinel at end-of-input. The sentinel is safe because
+     * callers only compare peek() against metacharacters, and every loop is additionally
+     * bounded by `pos < src.length`.
+     */
     private fun peek(): Char = if (pos < src.length) src[pos] else ' '
 
     private companion object {
