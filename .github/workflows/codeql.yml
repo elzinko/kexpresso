@@ -43,6 +43,6 @@ jobs:
         run: ./gradlew compileKotlinJvm compileTestKotlinJvm --no-daemon
 
       - name: Perform CodeQL analysis
-        uses: github/codeql-action/analyze@d77b13a0df3134d64a457ea9003f600b09fa1c8a # v3.36.1
+        uses: github/codeql-action/analyze@d1ba80a13dd99fba24a470575428917156a28b43 # v4.37.5
         with:
           category: "/language:java-kotlin"
