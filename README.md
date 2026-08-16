@@ -4,7 +4,7 @@
 
 [![CI](https://github.com/elzinko/kexpresso/actions/workflows/ci.yml/badge.svg)](https://github.com/elzinko/kexpresso/actions/workflows/ci.yml)
 [![Maven Central](https://img.shields.io/maven-central/v/io.github.elzinko/kexpresso.svg?label=Maven%20Central)](https://central.sonatype.com/artifact/io.github.elzinko/kexpresso)
-[![JitPack](https://jitpack.io/v/elzinko/kexpresso.svg)](https://jitpack.io/#elzinko/kexpresso)
+[![JitPack](https://img.shields.io/jitpack/v/github/elzinko/kexpresso?label=JitPack)](https://jitpack.io/#elzinko/kexpresso)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Kotlin](https://img.shields.io/badge/Kotlin-2.0.21-7F52FF?logo=kotlin)](https://kotlinlang.org)
 [![API docs](https://img.shields.io/badge/API_docs-Dokka-blue)](https://elzinko.github.io/kexpresso/)
