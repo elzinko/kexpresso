@@ -8,8 +8,11 @@ name: Apple & Native (macOS)
 # Kotlin/Native regex engine the Apple targets use.)
 
 on:
-  pull_request:
-    branches: [ "main" ]
+  # ⚠️ macOS runners are METERED even on public repos (~$0.08/min) — apple.yml on
+  # every PR was costing ~$6/mo. The Linux gate (ci.yml) already exercises the same
+  # Kotlin/Native regex engine via linuxX64, and release.yml rebuilds every Apple/native
+  # target at release time. So this now runs ON DEMAND only. Trigger it before touching
+  # Apple/iOS-specific code with:  gh workflow run apple.yml --ref <branch>
   workflow_dispatch:
 
 permissions:
